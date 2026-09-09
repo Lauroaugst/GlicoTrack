@@ -1,7 +1,8 @@
 # GlicoTrack
-1ªSemana
 
-Atividade 1 - Análise do Estudo de Caso
+*1ªSemana*
+
+# Atividade 1 - Análise do Estudo de Caso
 1. Objetivo
 
 Analisar o estudo de caso recebido pelo grupo, compreendendo o problema apresentado, seus usuários, contexto de utilização, objetivos, restrições e características da solução proposta, demonstrando o entendimento claro sobre o que precisa ser desenvolvido, para quem, por que e em quais condições.
@@ -37,7 +38,7 @@ Para garantir a transparência do trabalho em equipe e o versionamento adequado 
 
     Foram utilizados commits descritivos para permitir a identificação clara de qual seção do estudo de caso foi adicionada ou revisada por cada integrante.
 
-2ªSemana    
+*2ªSemana*    
 
 # Atividade 2 - Pesquisa, Benchmark e Personas
 
