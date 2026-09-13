@@ -33,6 +33,29 @@ Usuário possui alguma comorbidade que precisa de atenção com frequência em r
 **Em que situação poderá utilizar a solução?**
 Sempre antes ou depois da refeição, que é tanto o ponto onde sua glicose está em jejum, quanto o ponto onde sua glicose está no pico, podendo assim analisar com maior precisão sua necessidade e com isso decidir qual o melhor alimento para evitar ou recomendar. Além disso, é muito útil para informar o médico em uma consulta como está indo seu tratamento, ou simplesmente um possível processo de emagrecimento.
 
+## 2.3 Contexto de Uso
+
+- **Ambiente:** Casa, restaurante, trabalho, transporte público ou consultório médico.
+- **Momento de utilização:** Antes ou depois das refeições, antes ou depois de atividades físicas, ou antes dormir ou após acordar.
+- **Condições do Usuário:** Geralmente com fome, cansado, ou sob estresse. Idosos podem apresentar mãos trêmulas ou dificuldade de precisão.
+- **Dispositivo:** De preferência smartphones, os mais antigos e com pouca memória.
+- **Conectividade:** Deve funcionar offline, podendo registrar o nível de glicose e aplicação de insulina mesmo sem internet, após isso, os dados serão sincronizados com o Firebase quando tiver conexão.
+- **Nível de atenção:** Baixo ou dividido, principalmente antes das refeições. O registro precisa ser simples, com informações visualmente claras.
+- **Situação de Urgência:** Caso haja uma suspeita de hipoglicemia ou hiperglicemia. O alerta visual deve aparecer na tela imediatamente e de forma bem perceptível.
+- **Ruídos:** Pelo fato do usuário pode estar em um restaurante ou no trabalho, o aplicativo não deve utilizar sons para transmitir informações.
+- **Movimento:** Como pode ser utilizado para medir ao praticar esportes ou que estejam em um carro, ou no pior dos casos, em uma ambulância, é importante que os botões sejam bem interativos e grandes para facilitar o toque.
+- **Tempo disponível:** O registro deve ser feito rápido, de no máximo 3 interações.
+- **Experiência do usuário:** Como é um aplicativo que tem como público-alvo pessoas com diabetes tipo 2, e que esse público majoritariamente tem uma idade mais avançada, a interface deve priorizar símbolos, cores e textos grandes para melhorar a acessibilidade.
+
+**Explique como esses contextos podem influenciar o desenvolvimento do aplicativo:**
+Esses contextos influenciam, pois, a ideia não é somente desenvolver um aplicativo para um usuário sentado em casa, o usuário deve continuar vivendo sua vida normal, mas com um programa de suporte ajudando-o a ter uma visão melhor de como está seu tratamento, ou seja, os contextos ajudam a transformar essas situações em requisitos técnicos e de interface.
+
+## 2.4 Objetivo e proposta de valor
+
+O aplicativo pretende oferecer aos usuários uma forma simples e eficaz de verificar e registrar informações relacionadas a sua glicemia e controle de diabetes.
+
+Benefício que o aplicativo deverá proporcionar ao usuário: facilidade no controle diário da glicemia, possibilitando ao usuário uma melhor compreensão sobre os seus índices glicêmicos.
+
 ## 2.5 Personalidade, identidade e experiência
 
 - **Palavras conceituais:** As palavras deverão ser apresentadas de forma simples, possibilitando uma maior compreensão das informações importantes (controle da glicemia e diabetes).
