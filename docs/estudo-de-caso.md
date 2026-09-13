@@ -64,3 +64,30 @@ Identifique as principais funcionalidades e características que já foram estab
   - **Necessidade atendida:** Permitir que o usuário possa compartilhar seu histórico e gráficos com seu profissional de saúde.
 - **Funcionalidade:** Armazenamento local com SQLite
   - **Necessidade atendida:** Garantir que os registros sejam salvos mesmo quando o usuário estiver offline.
+
+ ## 2.7 Restrições e condições
+
+ Identifique as restrições apresentadas no estudo de caso que deverão ser respeitadas durante o projeto. Podem estar relacionadas a:
+
+ - **Quantidade de telas:** O protótipo é limitado a 4 telas principais (Formulário de entrada, Linha do tempo da semana, Geração de PDF e Configurações).
+ - **Número de interações:** A funcionalidade principal deve ser concluída em até 3 passos (Abrir App > Digitar número > Tocar "Ok"). O registro exige apenas 2 toques, e o sistema é estritamente proibido de exibir pop-ups de confirmação (ex: "Tem certeza?").
+ - **Dispositivos:** O aplicativo deve ser leve o suficiente para rodar e ser testado em aparelhos antigos com apenas 2GB de RAM. Os gráficos devem ser renderizados usando CustomPainter (Flutter) para não travar em GPUs fracas.
+ - **Versão do sistema operacional:** É obrigatório o uso de fontes nativas do sistema operacional para evitar bugs de renderização.
+ - **Privacidade:** O paciente tem 100% de posse sobre seus dados. O app deve garantir a portabilidade (exportação em PDF) e permitir a exclusão definitiva dos dados armazenados no Firebase por meio de uma requisição direta na própria interface.
+ - **Armazenamento e Conectividade:** Arquitetura estritamente Offline. O log deve ser salvo no banco local imediatamente, impossibilitando a perda de dados por falta de internet. O Firebase funciona apenas como espelho de backup.
+ - **Navegação:** O aplicativo deve carregar do zero em menos de 3 segundos. O ato de registrar a glicemia também deve levar menos de 3 segundos no total.
+ - **Acessibilidade:**
+  1. Interface livre de jargões técnicos.
+  2. O teclado numérico deve ser imenso e já abrir automaticamente junto com o app.
+  3. Fontes gigantes e botão de salvar configurado como o maior elemento da tela, projetados para idosos com tremores nas mãos (incluindo trava de rolagem para evitar toques acidentais).
+  4. Uso obrigatório de "cores severas" (vermelho para hipoglicemia, verde para normal, laranja para hiperglicemia) combinado com alertas sonoros, garantindo compreensão instantânea por pacientes com baixa escolaridade ou analfabetismo funcional.
+ - **Ambiente de utilização:** O design deve suportar uso seguro, rápido e discreto em ambientes dinâmicos e agitados, como restaurantes, transporte público, salas de aula e trabalho.
+ - **Outras condições específicas:** O repositório no GitHub deve obrigatoriamente manter a pasta/docs atualizada com o Documento de Requisitos, Personas, Pesquisas da SBD, justificativas de decisões visuais/acessibilidade e um arquivo CHANGELOG.md detalhando as melhorias aplicadas após testes com usuários.
+
+ ## 2.8 Pontos de atenção
+
+ Quais são os 3 aspectos do estudo de caso que consideramos mais importantes para o sucesso do aplicativo?
+
+ - **Rapidez e Acessibilidade Extrema:** A capacidade de registrar a glicemia em menos de 3 segundos e em até 3 toques, utilizando fontes gigantes e teclado numérico já aberto, eliminando qualquer barreira de uso para idosos ou pessoas em ambientes agitados.
+ - **Confiabilidade Operacional:** O salvamento imediato no banco de dados local, garantindo que o paciente nunca perca uma anotação crítica por falta de internet.
+ - **Feedback Visual e Utilidade Clínica:** A tradução imediata dos números através de cores severas (alertando rapidamente sobre hipoglicemia) e a geração de relatórios em PDF, facilitando a tomada de decisão do médico.
