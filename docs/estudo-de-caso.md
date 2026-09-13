@@ -33,6 +33,15 @@ Usuário possui alguma comorbidade que precisa de atenção com frequência em r
 **Em que situação poderá utilizar a solução?**
 Sempre antes ou depois da refeição, que é tanto o ponto onde sua glicose está em jejum, quanto o ponto onde sua glicose está no pico, podendo assim analisar com maior precisão sua necessidade e com isso decidir qual o melhor alimento para evitar ou recomendar. Além disso, é muito útil para informar o médico em uma consulta como está indo seu tratamento, ou simplesmente um possível processo de emagrecimento.
 
+## 2.5 Personalidade, identidade e experiência
+
+- **Palavras conceituais:** As palavras deverão ser apresentadas de forma simples, possibilitando uma maior compreensão das informações importantes (controle da glicemia e diabetes).
+- **Personalidade da identidade:** Deverá ser organizada e encorajadora, permitindo que os usuários sintam confiança ao utilizar o aplicativo. Uma organização simplificada também ajuda o aplicativo a transmitir segurança, tendo uma probabilidade menor de ocorrer erros de entendimento, fazendo com que as informações sejam apresentadas e interpretadas de forma correta.
+- **Tom da interface:** A interface deverá ser simples e intuitiva, proporcionando uma maior facilidade na utilização do aplicativo. Tons como branco e azul-claro são muito bons para passar esse tipo de sensação na hora de registrar os dados, mas para que mantenha o usuário em alerta caso seja necessário, tons de laranja ou vermelho também são utéis para avisar o usuário que algo está fora do comum. Além disso, como nosso público-alvo está em uma faixa de idade mais avançada, a acessibilidade deve ser tratada com prioridade, com uma tipografia simples, botões grandes e uma tela só com informações necessárias, até usuários que possuem dificuldade em interpretar interfaces pode conseguir utilizar sem grandes problemas .
+- **Tom da experiência do usuário:** O tom deveria ser acolhedor e encorajador, mesmo que os resultados sejam negativos, deve haver uma comunicação clara e cuidadosa, evitando alarmismo ou ansiedade desnecessária, a experiência deve transmitir uma ideia de que o aplicativo está lá para ajudar o usuário a acompanhar sua saúde, e não julgar resultados. O acompanhamento de sua glicemia deve ser simples e tranquilo.
+- **Forma como o aplicativo deseja ser lembrado:** O Glicotrack deveria ser lembrado como um aplicativo simples, confiável e acolhedor, onde qualquer um consegue utilizar sem dificuldades, tal qual um companheiro de acompanhamento diário, que ajude o usuário a cuidar da glicemia de maneira acessível e organizada.
+
+- 
 ## 2.6 Funcionalidades e características já definidas
 
 Identifique as principais funcionalidades e características que já foram estabelecidas no estudo de caso.
