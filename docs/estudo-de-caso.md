@@ -32,3 +32,26 @@ Usuário possui alguma comorbidade que precisa de atenção com frequência em r
 
 **Em que situação poderá utilizar a solução?**
 Sempre antes ou depois da refeição, que é tanto o ponto onde sua glicose está em jejum, quanto o ponto onde sua glicose está no pico, podendo assim analisar com maior precisão sua necessidade e com isso decidir qual o melhor alimento para evitar ou recomendar. Além disso, é muito útil para informar o médico em uma consulta como está indo seu tratamento, ou simplesmente um possível processo de emagrecimento.
+
+## 2.6 Funcionalidades e características já definidas
+
+Identifique as principais funcionalidades e características que já foram estabelecidas no estudo de caso.
+
+- **Funcionalidade:** Registro manual da glicemia
+  - **Necessidade atendida:** Permitir que o paciente registre sua glicemia de forma rápida e mantenha seu histórico de medições.
+- **Funcionalidade:** Registro do momento da medição
+  - **Necessidade atendida:** Permitir relacionar a glicemia no momento da alimentação, facilitando futuras análises.
+- **Funcionalidade:** Registro da dose de insulina
+  - **Necessidade atendida:** Permitir que o paciente mantenha o controle de suas doses de insulina junto com o histórico de glicemia.
+- **Funcionalidade:** Histórico de medições
+  - **Necessidade atendida:** Permitir acompanhar a evolução da glicemia ao longo do tempo, podendo identificar padrões ou possíveis pontos a se preocupar.
+- **Funcionalidade:** Gráfico semanal de variabilidade da glicose
+  - **Necessidade atendida:** Facilitar a visualização das oscilações da glicemia durante a semana, permitindo que o usuário possa fazer uma análise mais precisa.
+- **Funcionalidade:** Alerta de Hipoglicemia
+  - **Necessidade atendida:** Colocar na interface de uma forma chamativa quando um valor de glicemia pode representar uma situação de risco.
+- **Funcionalidade:** Configuração de faixa ideal de glicemia
+  - **Necessidade atendida:** Permitir que o usuário personalize como desejar sua classificação de resultados definidos do nível de glicose para um melhor acompanhamento.
+- **Funcionalidade:** Gerar relatório em PDF
+  - **Necessidade atendida:** Permitir que o usuário possa compartilhar seu histórico e gráficos com seu profissional de saúde.
+- **Funcionalidade:** Armazenamento local com SQLite
+  - **Necessidade atendida:** Garantir que os registros sejam salvos mesmo quando o usuário estiver offline.
