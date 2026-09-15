@@ -33,6 +33,38 @@ Usuário possui alguma comorbidade que precisa de atenção com frequência em r
 **Em que situação poderá utilizar a solução?**
 Sempre antes ou depois da refeição, que é tanto o ponto onde sua glicose está em jejum, quanto o ponto onde sua glicose está no pico, podendo assim analisar com maior precisão sua necessidade e com isso decidir qual o melhor alimento para evitar ou recomendar. Além disso, é muito útil para informar o médico em uma consulta como está indo seu tratamento, ou simplesmente um possível processo de emagrecimento.
 
+## 2.3 Contexto de Uso
+
+- **Ambiente:** Casa, restaurante, trabalho, transporte público ou consultório médico.
+- **Momento de utilização:** Antes ou depois das refeições, antes ou depois de atividades físicas, ou antes dormir ou após acordar.
+- **Condições do Usuário:** Geralmente com fome, cansado, ou sob estresse. Idosos podem apresentar mãos trêmulas ou dificuldade de precisão.
+- **Dispositivo:** De preferência smartphones, os mais antigos e com pouca memória.
+- **Conectividade:** Deve funcionar offline, podendo registrar o nível de glicose e aplicação de insulina mesmo sem internet, após isso, os dados serão sincronizados com o Firebase quando tiver conexão.
+- **Nível de atenção:** Baixo ou dividido, principalmente antes das refeições. O registro precisa ser simples, com informações visualmente claras.
+- **Situação de Urgência:** Caso haja uma suspeita de hipoglicemia ou hiperglicemia. O alerta visual deve aparecer na tela imediatamente e de forma bem perceptível.
+- **Ruídos:** Pelo fato do usuário pode estar em um restaurante ou no trabalho, o aplicativo não deve utilizar sons para transmitir informações.
+- **Movimento:** Como pode ser utilizado para medir ao praticar esportes ou que estejam em um carro, ou no pior dos casos, em uma ambulância, é importante que os botões sejam bem interativos e grandes para facilitar o toque.
+- **Tempo disponível:** O registro deve ser feito rápido, de no máximo 3 interações.
+- **Experiência do usuário:** Como é um aplicativo que tem como público-alvo pessoas com diabetes tipo 2, e que esse público majoritariamente tem uma idade mais avançada, a interface deve priorizar símbolos, cores e textos grandes para melhorar a acessibilidade.
+
+**Explique como esses contextos podem influenciar o desenvolvimento do aplicativo:**
+Esses contextos influenciam, pois, a ideia não é somente desenvolver um aplicativo para um usuário sentado em casa, o usuário deve continuar vivendo sua vida normal, mas com um programa de suporte ajudando-o a ter uma visão melhor de como está seu tratamento, ou seja, os contextos ajudam a transformar essas situações em requisitos técnicos e de interface.
+
+## 2.4 Objetivo e proposta de valor
+
+O aplicativo pretende oferecer aos usuários uma forma simples e eficaz de verificar e registrar informações relacionadas a sua glicemia e controle de diabetes.
+
+Benefício que o aplicativo deverá proporcionar ao usuário: facilidade no controle diário da glicemia, possibilitando ao usuário uma melhor compreensão sobre os seus índices glicêmicos.
+
+## 2.5 Personalidade, identidade e experiência
+
+- **Palavras conceituais:** As palavras deverão ser apresentadas de forma simples, possibilitando uma maior compreensão das informações importantes (controle da glicemia e diabetes).
+- **Personalidade da identidade:** Deverá ser organizada e encorajadora, permitindo que os usuários sintam confiança ao utilizar o aplicativo. Uma organização simplificada também ajuda o aplicativo a transmitir segurança, tendo uma probabilidade menor de ocorrer erros de entendimento, fazendo com que as informações sejam apresentadas e interpretadas de forma correta.
+- **Tom da interface:** A interface deverá ser simples e intuitiva, proporcionando uma maior facilidade na utilização do aplicativo. Tons como branco e azul-claro são muito bons para passar esse tipo de sensação na hora de registrar os dados, mas para que mantenha o usuário em alerta caso seja necessário, tons de laranja ou vermelho também são utéis para avisar o usuário que algo está fora do comum. Além disso, como nosso público-alvo está em uma faixa de idade mais avançada, a acessibilidade deve ser tratada com prioridade, com uma tipografia simples, botões grandes e uma tela só com informações necessárias, até usuários que possuem dificuldade em interpretar interfaces pode conseguir utilizar sem grandes problemas .
+- **Tom da experiência do usuário:** O tom deveria ser acolhedor e encorajador, mesmo que os resultados sejam negativos, deve haver uma comunicação clara e cuidadosa, evitando alarmismo ou ansiedade desnecessária, a experiência deve transmitir uma ideia de que o aplicativo está lá para ajudar o usuário a acompanhar sua saúde, e não julgar resultados. O acompanhamento de sua glicemia deve ser simples e tranquilo.
+- **Forma como o aplicativo deseja ser lembrado:** O Glicotrack deveria ser lembrado como um aplicativo simples, confiável e acolhedor, onde qualquer um consegue utilizar sem dificuldades, tal qual um companheiro de acompanhamento diário, que ajude o usuário a cuidar da glicemia de maneira acessível e organizada.
+
+- 
 ## 2.6 Funcionalidades e características já definidas
 
 Identifique as principais funcionalidades e características que já foram estabelecidas no estudo de caso.
@@ -55,3 +87,30 @@ Identifique as principais funcionalidades e características que já foram estab
   - **Necessidade atendida:** Permitir que o usuário possa compartilhar seu histórico e gráficos com seu profissional de saúde.
 - **Funcionalidade:** Armazenamento local com SQLite
   - **Necessidade atendida:** Garantir que os registros sejam salvos mesmo quando o usuário estiver offline.
+
+ ## 2.7 Restrições e condições
+
+ Identifique as restrições apresentadas no estudo de caso que deverão ser respeitadas durante o projeto. Podem estar relacionadas a:
+
+ - **Quantidade de telas:** O protótipo é limitado a 4 telas principais (Formulário de entrada, Linha do tempo da semana, Geração de PDF e Configurações).
+ - **Número de interações:** A funcionalidade principal deve ser concluída em até 3 passos (Abrir App > Digitar número > Tocar "Ok"). O registro exige apenas 2 toques, e o sistema é estritamente proibido de exibir pop-ups de confirmação (ex: "Tem certeza?").
+ - **Dispositivos:** O aplicativo deve ser leve o suficiente para rodar e ser testado em aparelhos antigos com apenas 2GB de RAM. Os gráficos devem ser renderizados usando CustomPainter (Flutter) para não travar em GPUs fracas.
+ - **Versão do sistema operacional:** É obrigatório o uso de fontes nativas do sistema operacional para evitar bugs de renderização.
+ - **Privacidade:** O paciente tem 100% de posse sobre seus dados. O app deve garantir a portabilidade (exportação em PDF) e permitir a exclusão definitiva dos dados armazenados no Firebase por meio de uma requisição direta na própria interface.
+ - **Armazenamento e Conectividade:** Arquitetura estritamente Offline. O log deve ser salvo no banco local imediatamente, impossibilitando a perda de dados por falta de internet. O Firebase funciona apenas como espelho de backup.
+ - **Navegação:** O aplicativo deve carregar do zero em menos de 3 segundos. O ato de registrar a glicemia também deve levar menos de 3 segundos no total.
+ - **Acessibilidade:**
+  1. Interface livre de jargões técnicos.
+  2. O teclado numérico deve ser imenso e já abrir automaticamente junto com o app.
+  3. Fontes gigantes e botão de salvar configurado como o maior elemento da tela, projetados para idosos com tremores nas mãos (incluindo trava de rolagem para evitar toques acidentais).
+  4. Uso obrigatório de "cores severas" (vermelho para hipoglicemia, verde para normal, laranja para hiperglicemia) combinado com alertas sonoros, garantindo compreensão instantânea por pacientes com baixa escolaridade ou analfabetismo funcional.
+ - **Ambiente de utilização:** O design deve suportar uso seguro, rápido e discreto em ambientes dinâmicos e agitados, como restaurantes, transporte público, salas de aula e trabalho.
+ - **Outras condições específicas:** O repositório no GitHub deve obrigatoriamente manter a pasta/docs atualizada com o Documento de Requisitos, Personas, Pesquisas da SBD, justificativas de decisões visuais/acessibilidade e um arquivo CHANGELOG.md detalhando as melhorias aplicadas após testes com usuários.
+
+ ## 2.8 Pontos de atenção
+
+ Quais são os 3 aspectos do estudo de caso que consideramos mais importantes para o sucesso do aplicativo?
+
+ - **Rapidez e Acessibilidade Extrema:** A capacidade de registrar a glicemia em menos de 3 segundos e em até 3 toques, utilizando fontes gigantes e teclado numérico já aberto, eliminando qualquer barreira de uso para idosos ou pessoas em ambientes agitados.
+ - **Confiabilidade Operacional:** O salvamento imediato no banco de dados local, garantindo que o paciente nunca perca uma anotação crítica por falta de internet.
+ - **Feedback Visual e Utilidade Clínica:** A tradução imediata dos números através de cores severas (alertando rapidamente sobre hipoglicemia) e a geração de relatórios em PDF, facilitando a tomada de decisão do médico.
