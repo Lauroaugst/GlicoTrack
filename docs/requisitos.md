@@ -13,7 +13,27 @@
 | Geração de relatório em PDF         | Gerar um relatório contendo os dados registrados para armazenamento ou compartilhamento.                                                      | Levar os registros organizados para acompanhamento com profissionais de saúde. | Facilita o acompanhamento do tratamento e garante ao usuário a possibilidade de portar seus próprios dados.              |
 | Configuração da faixa ideal         | Permitir definir a faixa de glicemia considerada adequada, como 70 a 180 mg/dL.                                                               | Adaptar o aplicativo às orientações recebidas para seu acompanhamento.         | Permite que as classificações e alertas sejam adequados às configurações utilizadas pelo usuário.                        |
 | Armazenamento Offline-First         | Salvar os registros imediatamente no armazenamento local, sincronizando-os posteriormente com o Firebase quando houver conexão.               | Registrar a glicemia mesmo sem acesso à internet.                              | Evita a perda de informações e garante que a função principal esteja disponível em qualquer ambiente.                    |
-| Exclusão de dados                   | Permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.                                         | Ter controle sobre seus dados pessoais de saúde.                               | Atende ao compromisso de projeto e requisitos relacionados à privacidade, segurança e direitos da LGPD.                  |
+| Exclusão de dados                   | Permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.                                         | Ter controle sobre seus dados pessoais de saúde.                               | Atende ao compromisso de projeto e requisitos relacionados à privacidade, segurança e direitos da LGPD.
+
+## 2.2 Requisitos funcionais
+
+- **RF01 - Registro de glicemia:** O sistema deve permitir que o usuário registre o valor de sua glicemia de forma rápida.
+- **RF02 - Registro do momento da medição:** O sistema deve permitir identificar o momento em que a glicemia foi medida, como antes ou depois de uma refeição.
+- **RF03 - Registro de insulina:** O sistema deve permitir que o usuário registre as doses de insulina aplicadas.
+- **RF04 - Registro de carboidratos:** O sistema deve permitir o registro da quantidade de carboidratos consumida nas refeições.
+- **RF05 - Classificação da glicemia:** O sistema deve classificar visualmente o resultado da glicemia de acordo com a faixa configurada pelo usuário.
+- **RF06 - Alerta de hipoglicemia:** O sistema deve emitir um alerta visual e sonoro quando o valor registrado for inferior a 70 mg/dL.
+- **RF07 - Indicação de hiperglicemia:** O sistema deve identificar visualmente valores acima da faixa considerada normal, utilizando a indicação de cor laranja.
+- **RF08 - Histórico de glicemias:** O sistema deve permitir que o usuário consulte os registros anteriores de glicemia.
+- **RF09 - Gráfico semanal:** O sistema deve apresentar um gráfico de linha com os registros e a variabilidade glicêmica da semana.
+- **RF10 - Geração de relatório:** O sistema deve permitir a geração de um relatório em formato PDF contendo os dados registrados pelo usuário.
+- **RF11 - Compartilhamento do relatório:** O sistema deve permitir que o usuário compartilhe o relatório PDF com profissionais de saúde.
+- **RF12 - Configuração da faixa ideal:** O sistema deve permitir que o usuário configure a faixa de glicemia utilizada para classificação dos resultados.
+- **RF13 - Armazenamento local:** O sistema deve salvar os registros no armazenamento local do dispositivo imediatamente após sua inserção.
+- **RF14 - Sincronização com o Firebase:** O sistema deve sincronizar os dados armazenados localmente com o Firebase quando houver conexão disponível.
+- **RF15 - Funcionamento offline:** O sistema deve permitir o registro e a consulta dos dados principais mesmo quando o dispositivo estiver sem conexão com a internet.
+- **RF16 - Exclusão de dados:** O sistema deve permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.
+- **RF17 - Consulta dos registros:** O sistema deve permitir que o usuário consulte suas informações de glicemia, insulina e carboidratos registradas anteriormente.                  |
 
 ## 2.4 CRUD
 
