@@ -13,24 +13,4 @@
 | Geração de relatório em PDF         | Gerar um relatório contendo os dados registrados para armazenamento ou compartilhamento.                                                      | Levar os registros organizados para acompanhamento com profissionais de saúde. | Facilita o acompanhamento do tratamento e garante ao usuário a possibilidade de portar seus próprios dados.              |
 | Configuração da faixa ideal         | Permitir definir a faixa de glicemia considerada adequada, como 70 a 180 mg/dL.                                                               | Adaptar o aplicativo às orientações recebidas para seu acompanhamento.         | Permite que as classificações e alertas sejam adequados às configurações utilizadas pelo usuário.                        |
 | Armazenamento Offline-First         | Salvar os registros imediatamente no armazenamento local, sincronizando-os posteriormente com o Firebase quando houver conexão.               | Registrar a glicemia mesmo sem acesso à internet.                              | Evita a perda de informações e garante que a função principal esteja disponível em qualquer ambiente.                    |
-| Exclusão de dados                   | Permitir que o usuário exclua seus registros e solicite a exclusã                                                                             |
-<<<<<<< HEAD
-=======
-## 2.5 Priorização
-
-| Prioridade     | Funcionalidade              | Justificativa                                                                                     |
-| :------------- | :-------------------------- | :------------------------------------------------------------------------------------------------ |
-| **Essencial**  | Registro de glicemia        | É a função central do aplicativo e atende diretamente à necessidade de monitoramento da glicemia. |
-| **Essencial**  | Classificação por cores     | Permite compreender rapidamente a situação da glicemia.                                           |
-| **Essencial**  | Alerta de hipoglicemia      | Avisa imediatamente quando o valor registrado está abaixo de 70 mg/dL.                            |
-| **Essencial**  | Armazenamento Offline-First | Garante que nenhum registro seja perdido por falta de internet.                                   |
-| **Essencial**  | Histórico de glicemias      | Permite acompanhar os registros e a evolução da glicemia.                                         |
-| **Essencial**  | Configuração da faixa ideal | Permite adaptar a classificação dos resultados à faixa definida para o acompanhamento.            |
-| **Importante** | Registro de insulina        | Complementa o acompanhamento da glicemia e do tratamento.                                         |
-| **Importante** | Contagem de carboidratos    | Auxilia o usuário a relacionar alimentação e variações da glicemia.                               |
-| **Importante** | Gráfico semanal             | Facilita a identificação de padrões e variações da glicemia.                                      |
-| **Importante** | Relatório em PDF            | Facilita o compartilhamento das informações com profissionais de saúde.                           |
-| **Importante** | Exclusão de dados           | Garante maior controle do usuário sobre seus dados pessoais e de saúde.                           |
-| **Secundária** | Compartilhamento do PDF     | Agrega praticidade ao envio dos dados, mas o relatório pode ser gerado sem essa função.           |
-| **Secundária** | Observações complementares  | Pode ser adicionada posteriormente para registrar informações adicionais sobre cada medição.      |
->>>>>>> b5e9c7a34652a30ea5e666f19bff6463c30b9ea8
+| Exclusão de dados                   | Permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.                                         | Ter controle sobre seus dados pessoais de saúde.                               | Atende ao compromisso de projeto e requisitos relacionados à privacidade, segurança e direitos da LGPD.                  |
