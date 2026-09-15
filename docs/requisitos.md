@@ -15,6 +15,17 @@
 | Armazenamento Offline-First         | Salvar os registros imediatamente no armazenamento local, sincronizando-os posteriormente com o Firebase quando houver conexão.               | Registrar a glicemia mesmo sem acesso à internet.                              | Evita a perda de informações e garante que a função principal esteja disponível em qualquer ambiente.                    |
 | Exclusão de dados                   | Permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.                                         | Ter controle sobre seus dados pessoais de saúde.                               | Atende ao compromisso de projeto e requisitos relacionados à privacidade, segurança e direitos da LGPD.                  |
 
+## 2.4 CRUD
+
+O CRUD do GlicoTrack pode ser representado principalmente pelos registros de glicemia, insulina e carboidratos, além das configurações da faixa ideal.
+
+- **C - Criar:** Glicemia, insulina, carboidratos, momento da medição e observações (O usuário poderá inserir uma nova medição e seus dados relacionados).
+- **R - Consultar:** Histórico de glicemia, insulina e carboidratos (O usuário poderá visualizar os registros anteriores e o gráfico semanal).
+- **U - Atualizar:** Registros já cadastrados e faixa ideal (O usuário poderá corrigir informações registradas incorretamente e alterar a faixa ideal configurada).
+- **D - Excluir:** Registros e dados armazenados (O usuário poderá excluir registros e solicitar a exclusão dos dados armazenados no Firebase).
+
+**Justificativa:** As quatro operações são relevantes para o GlicoTrack. A criação permite registrar as informações diariamente; a consulta possibilita acompanhar o histórico; a atualização permite corrigir possíveis erros de registro; e a exclusão garante ao usuário maior controle sobre seus próprios dados, especialmente por se tratarem de informações pessoais e de saúde.
+
 ## 2.5 Priorização
 
 | Prioridade     | Funcionalidade              | Justificativa                                                                                     |
