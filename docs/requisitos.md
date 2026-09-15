@@ -35,7 +35,7 @@
 - **RF16 - Exclusão de dados:** O sistema deve permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.
 - **RF17 - Consulta dos registros:** O sistema deve permitir que o usuário consulte suas informações de glicemia, insulina e carboidratos registradas anteriormente.         |
 
-2.3 Requisitos não funcionais 
+## 2.3 Requisitos não funcionais 
 
 Usabilidade 
 
