@@ -93,3 +93,26 @@ Para a execução da atividade e cumprindo os requisitos de organização do rep
 * O arquivo README.md foi atualizado com a divisão de tarefas de cada integrante.
 * As contribuições de código e documentação foram realizadas utilizando as próprias contas do GitHub de cada membro do grupo.
 * Foram utilizados commits com descrições claras que permitem identificar o trabalho realizado individualmente e em colaboração.
+
+## 3ªSemana    
+
+# Atividade 3 - Funcionalidades e Requisitos
+
+## 1. Objetivo
+Definir e documentar as funcionalidades do GlicoTrack, estruturando os Requisitos Funcionais (RF), Requisitos Não Funcionais (RNF), as operações de CRUD do sistema e realizando a priorização das tarefas de desenvolvimento.
+
+## 2. Responsabilidades da Equipe
+Para a execução da atividade, as responsabilidades foram distribuídas entre os integrantes da equipe da seguinte forma para a atualização do repositório:
+
+* **Lauro (Funcionalidades):** Responsável por documentar a tabela principal de funcionalidades, alinhando as necessidades dos usuários, a descrição e a justificativa de cada recurso do aplicativo.
+* **Leonardo (Requisitos Funcionais):** Responsável por listar e mapear os 17 Requisitos Funcionais (RF) que o sistema deve cumprir para entregar o valor esperado.
+* **Victor Lucas (Requisitos Não Funcionais):** Responsável por estruturar os 21 Requisitos Não Funcionais (RNF), garantindo restrições vitais de Usabilidade, Acessibilidade, Desempenho, Armazenamento, Segurança e Compatibilidade.
+* **Kyslon (CRUD):** Responsável por definir as operações de Criar, Consultar, Atualizar e Excluir das entidades primárias do aplicativo.
+* **Gustavo Henrique (Priorização):** Responsável por classificar as funcionalidades em matriz de prioridade (Essencial, Importante e Secundária) para guiar o fluxo de desenvolvimento.
+* **Todos os integrantes:** Responsáveis em conjunto por analisar, revisar e garantir que as funcionalidades documentadas atendam ao problema mapeado nas semanas anteriores.
+
+## 3. Entregáveis e Estrutura do Repositório
+O arquivo contendo todo o mapeamento técnico desta semana foi adicionado ao diretório do projeto:
+
+* **docs/requisitos.md:** Contém a descrição das funcionalidades, os requisitos (RF e RNF), a análise de CRUD e a matriz de priorização do aplicativo.
+* **CHANGELOG.md:** Atualizado para registrar a adição da documentação de requisitos desta semana.

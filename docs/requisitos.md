@@ -33,7 +33,65 @@
 - **RF14 - Sincronização com o Firebase:** O sistema deve sincronizar os dados armazenados localmente com o Firebase quando houver conexão disponível.
 - **RF15 - Funcionamento offline:** O sistema deve permitir o registro e a consulta dos dados principais mesmo quando o dispositivo estiver sem conexão com a internet.
 - **RF16 - Exclusão de dados:** O sistema deve permitir que o usuário exclua seus registros e solicite a exclusão dos dados armazenados no Firebase.
-- **RF17 - Consulta dos registros:** O sistema deve permitir que o usuário consulte suas informações de glicemia, insulina e carboidratos registradas anteriormente.                  |
+- **RF17 - Consulta dos registros:** O sistema deve permitir que o usuário consulte suas informações de glicemia, insulina e carboidratos registradas anteriormente.         |
+
+## 2.3 Requisitos não funcionais 
+
+Usabilidade 
+
+RNF01 — Acesso rápido: O usuário deve conseguir realizar o registro de uma glicemia em, no máximo, três interações. 
+
+RNF02 — Registro simplificado: A tela principal de registro deve apresentar o teclado numérico automaticamente, facilitando a inserção do valor. 
+
+RNF03 — Salvamento direto: O sistema não deve solicitar uma confirmação adicional antes de salvar um registro de glicemia. 
+
+RNF04 — Facilidade de uso: A interface deve utilizar linguagem simples e evitar jargões técnicos desnecessários. 
+
+Acessibilidade 
+
+RNF05 — Fonte ampliada: A tela de registro deve utilizar uma fonte grande para facilitar a visualização por idosos e usuários com dificuldades de leitura. 
+
+RNF06 — Botão de salvamento: O botão responsável pelo salvamento deve possuir tamanho suficiente para facilitar o toque, inclusive por usuários com mãos trêmulas. 
+
+RNF07 — Identificação por cores: O sistema deve utilizar vermelho para hipoglicemia, verde para faixa normal e laranja para hiperglicemia. 
+
+RNF08 — Feedback imediato: Após o registro, o sistema deve apresentar imediatamente a classificação da glicemia e, em caso de hipoglicemia, emitir alerta visual e sonoro. 
+
+Desempenho 
+
+RNF09 — Inicialização: O aplicativo deve iniciar em menos de três segundos em dispositivos compatíveis. 
+
+RNF10 — Registro: O sistema deve registrar uma medição em menos de três segundos. 
+
+RNF11 — Gráfico: O gráfico de variabilidade glicêmica deve utilizar CustomPainter do Flutter para reduzir o consumo de recursos e melhorar o desempenho em dispositivos com GPUs menos potentes. 
+
+Armazenamento e conectividade 
+
+RNF12 — Armazenamento local: Os registros devem ser armazenados localmente de forma imediata, garantindo o funcionamento da aplicação mesmo sem internet. 
+
+RNF13 — Sincronização: O Firebase deve ser utilizado como mecanismo de sincronização e backup dos dados, não como única forma de armazenamento dos registros. 
+
+RNF14 — Integridade dos registros: A ausência de conexão com a internet não deve resultar na perda de uma medição registrada pelo usuário. 
+
+Segurança e privacidade 
+
+RNF15 — Privacidade: O sistema deve proteger os dados pessoais e de saúde armazenados pelo usuário. 
+
+RNF16 — LGPD: O aplicativo deve respeitar os princípios e direitos estabelecidos pela Lei Geral de Proteção de Dados (LGPD). 
+
+RNF17 — Portabilidade: O usuário deve possuir acesso ao relatório PDF contendo seus próprios dados, permitindo sua utilização e compartilhamento com profissionais de saúde. 
+
+RNF18 — Exclusão de dados: O sistema deve possibilitar que o usuário solicite a exclusão de seus dados armazenados no Firebase diretamente pelo aplicativo. 
+
+Compatibilidade 
+
+RNF19 — Dispositivos: O aplicativo deve ser projetado para funcionar adequadamente em dispositivos com apenas 2 GB de memória RAM. 
+
+RNF20 — Fontes: O sistema deve utilizar fontes nativas do sistema para reduzir problemas de renderização e compatibilidade. 
+
+RNF21 — Ambientes de utilização: A interface deve permanecer funcional em diferentes ambientes de uso, como restaurantes, salas de aula, locais de trabalho e transporte público. 
+
+ 
 
 ## 2.4 CRUD
 

@@ -1,6 +1,14 @@
 # Changelog
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+## [Atividade 3 - Requisitos e Funcionalidades] - 2026-09-15
+
+### Adicionado
+- Criação do arquivo `docs/requisitos.md` detalhando as funcionalidades principais do GlicoTrack.
+- Mapeamento de 17 Requisitos Funcionais (RF) e 21 Requisitos Não Funcionais (RNF).
+- Documentação do fluxo de operações CRUD para as entidades de glicemia, insulina, carboidratos e faixas ideais.
+- Criação da tabela de priorização classificando o escopo em entregas essenciais, importantes e secundárias.
+- Atualização do `README.md` com a divisão de tarefas referentes à Atividade 3.
 
 ## [Atividade 2 — Pesquisa, Benchmark e Personas] - 2026-09-13
 
