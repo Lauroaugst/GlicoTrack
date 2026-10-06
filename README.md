@@ -127,7 +127,7 @@ Para a execução da atividade, as responsabilidades foram distribuídas da segu
 
 * **Leonardo (Componentes e Acessibilidade):** Responsável pela configuração da acessibilidade dos componentes e acessibilidade.
 
-* **Gustavo Henrique (Organização e Navegação):** Responsável por justificar os fluxos simplificados de 3 interações, uso de teclado aberto por padrão e os elementos de UI que facilitam o registro rápido.
+* **Gustavo Henrique (Organização e Navegação):** Responsável por justificar os fluxos simplificados de 3 interações e adicionar os elementos de UI que facilitam o registro rápido.
 
 * **Victor Lucas (Decisões relacionadas ao contexto de uso):** Responsável por alinhar as decisões visuais com o contexto dinâmico de uso do aplicativo (transporte, trabalho, etc.).
 
