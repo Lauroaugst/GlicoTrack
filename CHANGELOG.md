@@ -2,42 +2,60 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [Atividade 4 - Justificativas de Interface e Arquitetura] - 2026-10-05
+## [Atividade 5 - Apresentação e Entrega Final] - 2026-10-05
 
-## Adicionado
+### Adicionado
 
-- Criação do arquivo docs/justificativas.md contendo as principais decisões de interface e arquitetura do projeto.
-- Documentação das escolhas de design focado em acessibilidade: cores de alerta severas, tipografia gigante e navegação em no máximo 3 toques.
-- Documentação da arquitetura do sistema confirmando o uso de Flutter, Dart, banco de dados local SQLite (Offline-First) e Firebase como espelho de backup.
-- Atualização do README.md com a divisão de tarefas referentes à Atividade 4, além da inclusão do novo arquivo na árvore do repositório.
+* Atualização do `README.md` com as responsabilidades individuais para a apresentação final.
+* Definição da divisão dos 5 tópicos da apresentação entre os integrantes:
+
+  * **Victor Lucas:** Problema e Solução.
+  * **Gustavo Henrique:** Usuários.
+  * **Leonardo:** Funcionalidades.
+  * **Lauro:** Protótipo.
+  * **Kyslon:** Arquitetura.
+* Organização dos materiais finais da Unidade I.
+* Inclusão da apresentação final em `docs/apresentacaoFinalUnidadeI.pdf`.
+
+## [Atividade 4 - Prototipação] - 2026-10-05
+
+### Adicionado
+
+* Criação dos protótipos de baixa e alta fidelidade.
+* Criação do arquivo `docs/justificativas.md` com as principais decisões de UI/UX e arquitetura.
+* Atualização do `README.md` com a divisão de tarefas referentes à Atividade 4.
+* Inclusão dos arquivos `prototipoBaixaFidelidade.pdf` e `prototipoAltaFidelidade.pdf`.
 
 ## [Atividade 3 - Requisitos e Funcionalidades] - 2026-09-15
 
 ### Adicionado
-- Criação do arquivo `docs/requisitos.md` detalhando as funcionalidades principais do GlicoTrack.
-- Mapeamento de 17 Requisitos Funcionais (RF) e 21 Requisitos Não Funcionais (RNF).
-- Documentação do fluxo de operações CRUD para as entidades de glicemia, insulina, carboidratos e faixas ideais.
-- Criação da tabela de priorização classificando o escopo em entregas essenciais, importantes e secundárias.
-- Atualização do `README.md` com a divisão de tarefas referentes à Atividade 3.
 
-## [Atividade 2 — Pesquisa, Benchmark e Personas] - 2026-09-13
+* Criação do arquivo `docs/requisitos.md`.
+* Mapeamento de 17 Requisitos Funcionais (RF) e 21 Requisitos Não Funcionais (RNF).
+* Documentação das operações CRUD.
+* Criação da matriz de priorização das funcionalidades.
+* Atualização do `README.md` com a divisão de tarefas referentes à Atividade 3.
+
+## [Atividade 2 - Pesquisa, Benchmark e Personas] - 2026-09-13
 
 ### Adicionado
 
-- `docs/pesquisa.md`: pesquisa sobre o problema e o público, com informações relevantes sobre o Diabetes Mellitus, necessidades e dificuldades dos usuários, dados que influenciam o aplicativo, 4 fontes confiáveis e as **3 descobertas importantes** com a explicação de como cada uma influencia o projeto.
-- `docs/benchmark.md`: análise de **3 soluções existentes** (MySugr, Glic e Diabetes:M), com funcionalidades, pontos positivos, pontos negativos, aspectos de interface/experiência, o que pode ser aproveitado ou melhorado e a resposta sobre o que o GlicoTrack fará de diferente ou melhor.
-- `docs/personas.md`: as **2 personas principais** (Marlene Aparecida e Rodrigo Carlos Almeida) com nome fictício, perfil/contexto, objetivos, necessidades, dores, comportamentos e relação com o aplicativo, além da indicação e justificativa da **persona prioritária**.
-- `docs/Persona1.png` e `docs/Persona2.png`: cartões visuais das personas.
-- `docs/apresentacao.pdf`: apresentação objetiva do grupo com 1 descoberta da pesquisa, 1 solução analisada no benchmark, a persona prioritária e 1 necessidade que o aplicativo deverá atender.
+* Criação dos arquivos `docs/pesquisa.md`, `docs/benchmark.md` e `docs/personas.md`.
+* Criação das imagens das personas e da apresentação da atividade.
+* Pesquisa sobre o problema e público-alvo.
+* Benchmark de 3 soluções existentes.
+* Definição das 2 personas principais e da persona prioritária.
 
 ### Alterado
 
-- `README.md`: atualizado com o objetivo da Atividade 2, as responsabilidades de cada integrante e a estrutura de entregáveis no repositório.
-- `CHANGELOG.md`: movido para a raiz do repositório, conforme indicado no README.
+* Atualização do `README.md` com as responsabilidades dos integrantes.
+* Organização do `CHANGELOG.md` na raiz do repositório.
 
-## [Atividade 1 — Análise do Estudo de Caso] - 2026-09-01
+## [Atividade 1 - Análise do Estudo de Caso] - 2026-09-01
 
 ### Adicionado
 
-- `docs/estudo-de-caso.md`: análise completa do escopo do GlicoTrack, com problema, público e usuários, personalidade/identidade/experiência, funcionalidades já definidas, restrições e condições e os 3 pontos de atenção do projeto.
-- Estruturação inicial do repositório e criação do `README.md` com o objetivo da entrega e a divisão de responsabilidades da equipe.
+* Criação de `docs/estudo-de-caso.md`.
+* Análise do problema, público, contexto, funcionalidades, restrições e pontos de atenção.
+* Estruturação inicial do repositório e criação do `README.md`.
+* Definição das responsabilidades da equipe.
