@@ -141,3 +141,24 @@ O arquivo contendo todo o mapeamento técnico desta semana foi adicionado ao dir
 
 * **docs/requisitos.md:** Contém a descrição das funcionalidades, os requisitos (RF e RNF), a análise de CRUD e a matriz de priorização do aplicativo.
 * **CHANGELOG.md:** Atualizado para registrar a adição da documentação de requisitos desta semana.
+
+## Divisão da Atividade 05 - APRESENTAÇÃO E ENTREGA FINAL
+
+## 2. Responsabilidades da Equipe
+
+Para a execução da atividade, as responsabilidades foram distribuídas da seguinte forma:
+
+### 3.1 Problema e Solução — Lauro Antenor Augusto de Souza Santos
+Responsável pela definição e apresentação do **problema identificado**, do **público-alvo** e da **proposta de solução** do aplicativo. Também participou da organização das informações utilizadas para explicar a necessidade do GlicoTrack e como a aplicação busca solucioná-la.
+
+### 3.2 Usuários — Leonardo Carvalho da Cruz
+Responsável pela definição e apresentação das **personas do projeto**, com destaque para a **persona prioritária**. Também identificou e descreveu as principais necessidades dos usuários que influenciaram as decisões tomadas durante o desenvolvimento da solução.
+
+### 3.3 Funcionalidades — Kyslon Matos Costa
+Responsável pelo levantamento e apresentação das **principais funcionalidades do aplicativo**, relacionando cada uma às necessidades identificadas para os usuários. Também auxiliou na definição e organização dos **requisitos** considerados no projeto.
+
+### 3.4 Protótipo — Victor Lucas Nascimento Fontes
+Responsável pelo desenvolvimento e apresentação dos **protótipos do aplicativo**, incluindo a elaboração das principais telas e do **fluxo de navegação**. Também demonstrou as principais funcionalidades representadas no protótipo e a interação esperada do usuário com a aplicação.
+
+### 3.5 Arquitetura — Gustavo Henriques
+Responsável pela apresentação da **arquitetura adotada no projeto**, explicando os principais componentes utilizados e suas respectivas funções. Também auxiliou na organização da estrutura técnica da aplicação e na compreensão de como os componentes se relacionam.
