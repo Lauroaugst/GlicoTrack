@@ -10,7 +10,7 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 * Definição da divisão dos 5 tópicos da apresentação entre os integrantes:
 
   * **Victor Lucas:** Problema e Solução.
-  * **Gustavo Henrique:** Usuários.
+  * **Gustavo Henriques:** Usuários.
   * **Leonardo:** Funcionalidades.
   * **Lauro:** Protótipo.
   * **Kyslon:** Arquitetura.
