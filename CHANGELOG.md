@@ -1,6 +1,16 @@
 # Changelog
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
+
+## [Atividade 4 - Justificativas de Interface e Arquitetura] - 2026-10-05
+
+## Adicionado
+
+- Criação do arquivo docs/justificativas.md contendo as principais decisões de interface e arquitetura do projeto.
+- Documentação das escolhas de design focado em acessibilidade: cores de alerta severas, tipografia gigante e navegação em no máximo 3 toques.
+- Documentação da arquitetura do sistema confirmando o uso de Flutter, Dart, banco de dados local SQLite (Offline-First) e Firebase como espelho de backup.
+- Atualização do README.md com a divisão de tarefas referentes à Atividade 4, além da inclusão do novo arquivo na árvore do repositório.
+
 ## [Atividade 3 - Requisitos e Funcionalidades] - 2026-09-15
 
 ### Adicionado
