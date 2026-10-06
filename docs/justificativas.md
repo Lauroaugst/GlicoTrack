@@ -8,6 +8,8 @@ Registre brevemente as principais decisões de interface e arquitetura, como:
 
 - **Componentes (elementos de UI utilizados):** A interface fará uso de um teclado numérico nativo imenso e formulários com campos gigantes. Para o gráfico de linha que mostra a variabilidade glicêmica da semana, será utilizado o CustomPainter do Flutter, visando otimização para que a interface não trave em dispositivos com GPUs mais fracas.
 
+- **Decisões relacionadas ao contexto de uso (condições e ambiente em que o sistema será acessado):** O sistema é projetado para engajamento vitalício crônico (4x ao dia) e de vigília (para cuidadores). Como será acessado em restaurantes, salas de aula, trabalho e transporte público, o app foi desenhado para registrar a glicemia em menos de 3 segundos, permitindo que o paciente faça a anotação de forma rápida e discreta antes de comer ou aplicar a insulina.
+
 - **Acessibilidade (conformidade com padrões de inclusão):** Além da indicação por cores agressivas, o aplicativo contará com alertas multissensoriais; por exemplo, ao digitar um valor de hipoglicemia (como 68 mg/dL), o app reagirá imediatamente com um alerta claro e sonoro. O projeto também atende à portabilidade e privacidade da LGPD, garantindo que o relatório PDF pertença 100% ao usuário e permitindo a exclusão de dados em nuvem via requisição no app.
 
 - **Arquitetura do sistema (visão geral da arquitetura adotada e principais componentes):**
