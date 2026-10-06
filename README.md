@@ -111,6 +111,31 @@ Para a execução da atividade, as responsabilidades foram distribuídas entre o
 * **Gustavo Henrique (Priorização):** Responsável por classificar as funcionalidades em matriz de prioridade (Essencial, Importante e Secundária) para guiar o fluxo de desenvolvimento.
 * **Todos os integrantes:** Responsáveis em conjunto por analisar, revisar e garantir que as funcionalidades documentadas atendam ao problema mapeado nas semanas anteriores.
 
+## 4ª Semana
+
+# Atividade 4 — Justificativas de Interface e Arquitetura
+
+## 1. Objetivo
+
+Registrar formalmente as principais decisões de interface (UI/UX) e arquitetura do aplicativo GlicoTrack, garantindo que as escolhas de design, navegação e tecnologias (Flutter, Dart, SQLite) estejam alinhadas com as restrições de acessibilidade, contexto de uso e operação Offline-First.
+
+## 2. Responsabilidades da Equipe
+
+Para a execução da atividade, as responsabilidades foram distribuídas da seguinte forma:
+
+* **Lauro (Interface):** Responsável por documentar as escolhas de cores (paleta de alerta), tipografia gigante.
+
+* **Leonardo (Componentes e Acessibilidade):** Responsável pela configuração da acessibilidade dos componentes e acessibilidade.
+
+* **Gustavo Henrique (Organização e Navegação):** Responsável por justificar os fluxos simplificados de 3 interações, uso de teclado aberto por padrão e os elementos de UI que facilitam o registro rápido.
+
+* **Victor Lucas (Decisões relacionadas ao contexto de uso):** Responsável por alinhar as decisões visuais com o contexto dinâmico de uso do aplicativo (transporte, trabalho, etc.).
+
+* **Kyslon (Arquitetura do Sistema):** Responsável por justificar a escolha tecnológica do Flutter/Dart, uso do CustomPainter para performance e adoção do SQLite para a arquitetura Offline-First, com Firebase apenas como backup.
+
+* **Todos os integrantes:** Revisão colaborativa do documento final para garantir coesão com os requisitos das semanas anteriores.
+
+
 ## 3. Entregáveis e Estrutura do Repositório
 O arquivo contendo todo o mapeamento técnico desta semana foi adicionado ao diretório do projeto:
 
