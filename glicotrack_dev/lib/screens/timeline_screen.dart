@@ -9,7 +9,7 @@ enum GlucoseLevelStatus { low, normal, high }
 class MeasurementModel {
   final String id;
   final String dateLabel; // Ex: 'Hoje', 'Ontem', '26/08/26'
-  final String time;
+  final String time; 
   final int glucoseValue;
   final String contextTag; // Ex: 'Pós-Refeição'
   final GlucoseLevelStatus status;
