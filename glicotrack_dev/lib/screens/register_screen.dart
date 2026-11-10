@@ -8,7 +8,7 @@ class MealTimeOption {
 
   const MealTimeOption({
     required this.id,
-    required this.label,
+    required this.label, 
     required this.icon,
   });
 }
