@@ -7,7 +7,7 @@ Aplicativo móvel para controle e acompanhamento da glicemia e do diabetes, com 
 
 ### Equipe
 
-- Gustavo Henrique
+- Gustavo Henriques
 - Kyslon Matos Costa
 - Lauro Antenor Augusto de Souza Santos
 - Leonardo Carvalho da Cruz
