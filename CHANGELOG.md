@@ -2,6 +2,16 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [Unidade II - Base de domínio e dados] - 2026-11-17
+
+### Adicionado
+
+* Modelos de domínio, validações, classificação glicêmica e contratos de repositório.
+* SQLite com SQLCipher, chave em armazenamento seguro, fila e resolução de conflitos.
+* Sincronização Firestore, regras de acesso e função autenticada de exclusão.
+* Testes de domínio, persistência, sincronização e segurança; registro de uso de IA.
+
+
 ## [Atividade 5 - Apresentação e Entrega Final] - 2026-10-05
 
 ### Adicionado

@@ -1,0 +1,12 @@
+.tools/
+**/.dart_tool/
+**/build/
+**/.flutter-plugins*
+**/android/local.properties
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Pods/
+**/node_modules/
+**/.firebase/
+**/*-debug.log
+**/firebase.local.json

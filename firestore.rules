@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && !exists(/databases/$(database)/documents/deletionRequests/$(uid));
+    }
+    function validPayload(d) {
+      let p = d.payload;
+      return (d.kind == 'record'
+        && p.keys().hasOnly(['glucose','measuredAt','category','meal','createdAt','insulin','carbs','notes'])
+        && p.keys().hasAll(['glucose','measuredAt','category','meal','createdAt','insulin','carbs','notes'])
+        && p.glucose is int && p.glucose > 0 && p.glucose <= 1000
+        && p.measuredAt is int && p.createdAt is int
+        && p.category in ['fasting','beforeMeal','afterMeal','bedtime']
+        && p.meal in ['breakfast','lunch','dinner']
+        && (p.insulin == null || (p.insulin is number && p.insulin >= 0 && p.insulin <= 1000))
+        && (p.carbs == null || (p.carbs is number && p.carbs >= 0 && p.carbs <= 5000))
+        && p.notes is string && p.notes.size() <= 2000)
+        || (d.kind == 'settings' && d.id == 'settings'
+          && p.keys().hasOnly(['lower','upper']) && p.keys().hasAll(['lower','upper'])
+          && p.lower is int && p.upper is int && p.lower >= 70 && p.upper > p.lower && p.upper <= 1000)
+        || (d.kind == 'profile' && d.id == 'profile'
+          && p.keys().hasOnly(['name','email','createdAt','age','weight','photo'])
+          && p.keys().hasAll(['name','email','createdAt','age','weight','photo'])
+          && p.name is string && p.name.size() > 0 && p.name.size() <= 120
+          && p.email is string && p.email == request.auth.token.email
+          && p.createdAt is int
+          && (p.age == null || (p.age is int && p.age >= 0 && p.age <= 130))
+          && (p.weight == null || (p.weight is number && p.weight > 0 && p.weight <= 700))
+          && (p.photo == null || (p.photo is string && p.photo.size() <= 300000)));
+    }
+    function valid(d, uid, id) {
+      return d.keys().hasAll(['id','uid','kind','revision','baseRevision','updatedAt','payload','deleted'])
+        && d.id == id && d.uid == uid && d.kind in ['record','settings','profile']
+        && (d.kind != 'record' || id.matches('^[a-f0-9-]{36}$'))
+        && d.revision is string && d.revision.matches('^[0-9]{16}-[a-f0-9-]{36}$')
+        && (d.baseRevision == null || (d.baseRevision is string && d.baseRevision.matches('^[0-9]{16}-[a-f0-9-]{36}$')))
+        && d.updatedAt is int && d.updatedAt >= 0 && d.deleted is bool
+        && d.payload is map && validPayload(d);
+    }
+    match /users/{uid}/documents/{id} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && valid(request.resource.data, uid, id)
+        && request.resource.data.keys().hasOnly(['id','uid','kind','revision','baseRevision','updatedAt','payload','deleted','changedAt'])
+        && request.resource.data.changedAt == request.time;
+      allow update: if owner(uid) && valid(request.resource.data, uid, id)
+        && request.resource.data.keys().hasOnly(['id','uid','kind','revision','baseRevision','updatedAt','payload','deleted','changedAt'])
+        && request.resource.data.kind == resource.data.kind
+        && request.resource.data.changedAt == request.time
+        && (!resource.data.deleted || request.resource.data.deleted);
+      // Offline clients need tombstones. Physical deletion is server-only.
+      allow delete: if false;
+    }
+    match /users/{uid}/conflicts/{conflictId} {
+      allow read: if owner(uid);
+      allow create: if owner(uid) && valid(request.resource.data, uid, request.resource.data.id)
+        && request.resource.data.keys().hasOnly(['id','uid','kind','revision','baseRevision','updatedAt','payload','deleted'])
+        && conflictId == request.resource.data.id + '_' + request.resource.data.revision;
+      allow update: if owner(uid) && request.resource.data == resource.data;
+      allow delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}
