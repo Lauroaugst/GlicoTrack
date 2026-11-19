@@ -1,6 +1,8 @@
 import 'package:glicotrack_dev/data/local_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:uuid/uuid.dart';
 
 class MealTimeOption {
   final String id;
@@ -85,21 +87,93 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
-  void _saveRecord() {
-    final glucoseText = _glucoseController.text.trim();
-    if (glucoseText.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Por favor, informe o valor da glicemia.',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: Color(0xFFB00020),
-        ),
-      );
-      return;
+  Future<void> _saveRecord() async {
+  // 1. Obtém e valida o valor da glicemia.
+  final glucose = int.tryParse(_glucoseController.text.trim());
+
+  if (glucose == null || glucose < 1 || glucose > 1000) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Informe uma glicemia válida entre 1 e 1000 mg/dL.'),
+        backgroundColor: Color(0xFFB00020),
+      ),
+    );
+    return;
+  }
+
+  // 2. Converte os campos opcionais para números.
+  final insulinText = _insulinController.text.trim();
+  final carbsText = _carbsController.text.trim();
+
+  final insulin = insulinText.isEmpty
+      ? null
+      : double.tryParse(insulinText.replaceAll(',', '.'));
+
+  final carbs = carbsText.isEmpty
+      ? null
+      : double.tryParse(carbsText.replaceAll(',', '.'));
+
+  // Verifica se os campos opcionais foram preenchidos corretamente.
+  if ((insulinText.isNotEmpty && insulin == null) ||
+      (carbsText.isNotEmpty && carbs == null)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Confira os valores de insulina e carboidratos.'),
+        backgroundColor: Color(0xFFB00020),
+      ),
+    );
+    return;
+  }
+
+  try {
+    // 3. Recupera o usuário autenticado no Firebase.
+    final user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      throw StateError('Usuário não autenticado.');
     }
 
+    // 4. Cria um identificador único para o registro.
+    final id = const Uuid().v4();
+
+    // 5. Combina a data selecionada com o horário atual.
+    final now = DateTime.now();
+
+    final measuredAt = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+      now.hour,
+      now.minute,
+      now.second,
+    );
+
+    // 6. Cria o objeto com os dados informados pelo usuário.
+    final record = HealthRecord(
+      id: id,
+      uid: user.uid,
+      glucose: glucose,
+      measuredAt: measuredAt,
+      category: _selectedCategory,
+      meal: _selectedMealTimeId,
+      createdAt: now,
+      insulin: insulin,
+      carbs: carbs,
+    );
+
+    // 7. Valida os dados conforme as regras do modelo.
+    record.validate();
+
+    // 8. Salva o registro no SQLite criptografado.
+    await widget.localDatabase.save(
+      record.id,
+      'record',
+      record.toJson(),
+    );
+
+    if (!mounted) return;
+
+    // 9. Exibe sucesso somente após salvar no SQLite.
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text(
@@ -110,12 +184,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ),
     );
 
-    // Limpa os campos após salvar para facilitar um novo registro
+    // 10. Limpa os campos para permitir um novo registro.
     _glucoseController.clear();
     _insulinController.clear();
     _carbsController.clear();
-  }
+  } catch (error) {
+    if (!mounted) return;
 
+    // Exibe uma mensagem caso ocorra erro na validação ou no banco.
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Não foi possível salvar o registro: $error'),
+        backgroundColor: const Color(0xFFB00020),
+      ),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
