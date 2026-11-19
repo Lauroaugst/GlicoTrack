@@ -1,3 +1,4 @@
+import 'package:glicotrack_dev/data/local_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -30,7 +31,13 @@ abstract class GlucoseMockData {
 }
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  
+  final LocalDatabase localDatabase;
+
+  const RegisterScreen({
+    super.key,
+    required this.localDatabase,
+  });
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
