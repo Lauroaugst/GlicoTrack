@@ -51,7 +51,9 @@ class GlicoTrackApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0060C0)),
         fontFamily: 'Roboto',
       ),
-      home: const SplashScreen(),
+     home: SplashScreen(
+  localDatabase: services.local,
+),
     );
   }
 }
