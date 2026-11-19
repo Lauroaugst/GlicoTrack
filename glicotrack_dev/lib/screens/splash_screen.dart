@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:glicotrack_dev/data/local_database.dart';
 import 'main_screen.dart';
 
 // ============================================================================
@@ -7,7 +8,13 @@ import 'main_screen.dart';
 // ============================================================================
 
 class SplashScreen extends StatefulWidget {
-  const SplashScreen({super.key});
+  // Banco de dados já inicializado pelo AppBootstrap.
+  final LocalDatabase localDatabase;
+
+  const SplashScreen({
+    super.key,
+    required this.localDatabase,
+  });
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -42,7 +49,9 @@ class _SplashScreenState extends State<SplashScreen> {
         PageRouteBuilder(
           transitionDuration: const Duration(milliseconds: 800),
           pageBuilder: (context, animation, secondaryAnimation) =>
-              const MainScreen(),
+    MainScreen(
+      localDatabase: widget.localDatabase,
+    ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             // Animação M3 suave de transição entre telas
             return FadeTransition(
