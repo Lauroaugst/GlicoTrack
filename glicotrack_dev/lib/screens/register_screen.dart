@@ -193,7 +193,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
+                // Seleção da categoria da medição.
+                const Text(
+                  'Momento da medição',
+                    style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                          ),
+                     ),
+                const SizedBox(height: 8),
 
+                    DropdownButtonFormField<MeasurementCategory>(
+                      initialValue: _selectedCategory,
+                        decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                      ),
+                         items: const [
+                    DropdownMenuItem(
+                        value: MeasurementCategory.beforeMeal,
+                        child: Text('Antes da refeição'),
+                      ),
+                    DropdownMenuItem(
+                         value: MeasurementCategory.afterMeal,
+                          child: Text('Depois da refeição'),
+                      ),
+                     DropdownMenuItem(
+                           value: MeasurementCategory.fasting,
+                           child: Text('Em jejum'),
+                      ),
+                      DropdownMenuItem(
+                          value: MeasurementCategory.bedtime,
+                          child: Text('Antes de dormir'),
+                      ),
+                        ],
+                          onChanged: (value) {
+                              if (value != null) {
+                                  setState(() {
+                                     _selectedCategory = value;
+                                  });
+                                }
+                            },
+                        ),
+
+                        const SizedBox(height: 24),
                 // Inputs Numéricos (Retrocedidos para digitação direta, sem steppers)
                 _SimpleTextField(
                   label: 'Glicemia (mg/dL)',
