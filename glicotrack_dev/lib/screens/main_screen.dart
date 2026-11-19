@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 
+import 'package:glicotrack_dev/data/local_database.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 import 'history_screen.dart';
 import 'profile_hub_screen.dart';
 
 class MainScreen extends StatefulWidget {
-  const MainScreen({super.key});
+  // Instância do SQLite recebida da inicialização do aplicativo.
+  final LocalDatabase localDatabase;
+
+  const MainScreen({
+    super.key,
+    required this.localDatabase,
+  });
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
-
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
@@ -25,7 +31,9 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
       ),
-      const RegisterScreen(),
+      RegisterScreen(
+  localDatabase: widget.localDatabase,
+      ),
       const ProfileHubScreen(),
       const HistoryScreen(),
     ];
