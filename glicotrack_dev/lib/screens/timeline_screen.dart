@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:glicotrack_dev/data/local_database.dart';
+import 'package:glicotrack_dev/domain/models.dart';
 
 // ============================================================================
 // DATA MODELS
@@ -40,7 +42,12 @@ class MeasurementModel {
 // ============================================================================
 
 class TimelineScreen extends StatefulWidget {
-  const TimelineScreen({super.key});
+  final LocalDatabase localDatabase;
+
+  const TimelineScreen({
+    super.key,
+    required this.localDatabase,
+  });
 
   @override
   State<TimelineScreen> createState() => _TimelineScreenState();
