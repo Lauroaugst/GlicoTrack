@@ -11,7 +11,7 @@ enum GlucoseLevelStatus { low, normal, high }
 class MeasurementModel {
   final String id;
   final String dateLabel; // Ex: 'Hoje', 'Ontem', '26/08/26'
-  final String time; 
+  final String time;
   final int glucoseValue;
   final String contextTag; // Ex: 'Pós-Refeição'
   final GlucoseLevelStatus status;
@@ -52,98 +52,89 @@ class MeasurementModel {
 class TimelineScreen extends StatefulWidget {
   final LocalDatabase localDatabase;
 
-  const TimelineScreen({
-    super.key,
-    required this.localDatabase,
-  });
+  const TimelineScreen({super.key, required this.localDatabase});
 
   @override
   State<TimelineScreen> createState() => _TimelineScreenState();
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
-  
+  // Inicialização com os dados de exemplo, gerenciados em estado local
+  // para simular a reatividade da remoção dos dados.
   List<MeasurementModel> _measurements = [];
 
-bool _isLoading = true;
-String? _loadError;@override
-void initState() {
-  super.initState();
-  _loadRecords();
-}
-Future<void> _loadRecords() async {
-  setState(() {
-    _isLoading = true;
-    _loadError = null;
-    
-  });
-
-  try {
-    final documents = await widget.localDatabase.all(kind: 'record');
-
-    final records = documents
-        .where((doc) => !doc.deleted)
-        .map(
-          (doc) => HealthRecord.fromJson(
-            doc.id,
-            doc.uid,
-            doc.payload,
-          ),
-        )
-        .toList();
-
-    records.sort(
-      (a, b) => b.measuredAt.compareTo(a.measuredAt),
-    );
-
-    final measurements = records.map((record) {
-      final date = record.measuredAt.toLocal();
-      final glucose = record.glucose;
-
-      final dateLabel =
-          '${date.day.toString().padLeft(2, '0')}/'
-          '${date.month.toString().padLeft(2, '0')}/'
-          '${date.year}';
-
-      final time =
-          '${date.hour.toString().padLeft(2, '0')}:'
-          '${date.minute.toString().padLeft(2, '0')}';
-
-      final status = glucose < 70
-          ? GlucoseLevelStatus.low
-          : glucose > 180
-              ? GlucoseLevelStatus.high
-              : GlucoseLevelStatus.normal;
-
-      return MeasurementModel(
-        id: record.id,
-        dateLabel: dateLabel,
-        time: time,
-        glucoseValue: glucose,
-         contextTag: 'Glicemia',
-        status: status,
-        insulin: record.insulin,
-        carbs: record.carbs,
-  notes: record.notes,
-  meal: record.meal,
-);
-    }).toList();
-
-    if (!mounted) return;
-
-    setState(() {
-      _measurements = measurements;
-      _isLoading = false;
-    });
-  } catch (e) {
-    if (!mounted) return;
-
-    setState(() {
-      _loadError = 'Não foi possível carregar os registros.';
-      _isLoading = false;
-    });
+  bool _isLoading = true;
+  String? _loadError;
+  @override
+  void initState() {
+    super.initState();
+    _loadRecords();
   }
-}
+
+  Future<void> _loadRecords() async {
+    setState(() {
+      _isLoading = true;
+      _loadError = null;
+    });
+
+    try {
+      final documents = await widget.localDatabase.all(kind: 'record');
+
+      final records = documents
+          .where((doc) => !doc.deleted)
+          .map((doc) => HealthRecord.fromJson(doc.id, doc.uid, doc.payload))
+          .toList();
+
+      records.sort((a, b) => b.measuredAt.compareTo(a.measuredAt));
+
+      final measurements = records.map((record) {
+        final date = record.measuredAt.toLocal();
+        final glucose = record.glucose;
+
+        final dateLabel =
+            '${date.day.toString().padLeft(2, '0')}/'
+            '${date.month.toString().padLeft(2, '0')}/'
+            '${date.year}';
+
+        final time =
+            '${date.hour.toString().padLeft(2, '0')}:'
+            '${date.minute.toString().padLeft(2, '0')}';
+
+        final status = glucose < 70
+            ? GlucoseLevelStatus.low
+            : glucose > 180
+            ? GlucoseLevelStatus.high
+            : GlucoseLevelStatus.normal;
+
+        return MeasurementModel(
+          id: record.id,
+          dateLabel: dateLabel,
+          time: time,
+          glucoseValue: glucose,
+          contextTag: 'Glicemia',
+          status: status,
+          insulin: record.insulin,
+          carbs: record.carbs,
+          notes: record.notes,
+          meal: record.meal,
+        );
+      }).toList();
+
+      if (!mounted) return;
+
+      setState(() {
+        _measurements = measurements;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _loadError = 'Não foi possível carregar os registros.';
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -195,20 +186,20 @@ Future<void> _loadRecords() async {
                       // Lista de Itens Rolável
                       Expanded(
                         child: _isLoading
-    ? const Center(
-        child: CircularProgressIndicator(
-          color: Colors.white,
-        ),
-      )
-    : _loadError != null
-        ? Center(
-            child: Text(
-              _loadError!,
-              style: const TextStyle(color: Colors.white),
-            ),
-          )
-        : _measurements.isEmpty
-            ? const Center(
+                            ? const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
+                              )
+                            : _loadError != null
+                            ? Center(
+                                child: Text(
+                                  _loadError!,
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              )
+                            : _measurements.isEmpty
+                            ? const Center(
                                 child: Text(
                                   'Nenhum registro encontrado.',
                                   style: TextStyle(
@@ -222,7 +213,7 @@ Future<void> _loadRecords() async {
                                   horizontal: 16.0,
                                 ),
                                 itemCount: _measurements.length,
-                                separatorBuilder: (_, __) =>
+                                separatorBuilder: (context, index) =>
                                     const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
                                   return _MeasurementCard(
@@ -233,11 +224,8 @@ Future<void> _loadRecords() async {
                       ),
 
                       // Botão Destrutivo de Exclusão
-                      if (_measurements.isNotEmpty)
-                        _DeleteDataButton(
-                          onPressed: _showDeleteConfirmationDialog,
-                        ),
-
+                      // Exclusão temporariamente desativada.
+                      // Será implementada com SQLite e sincronização no Firestore.
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -297,7 +285,6 @@ class _TimelineHeader extends StatelessWidget {
     );
   }
 }
-
 
 class _MeasurementCard extends StatelessWidget {
   final MeasurementModel model;
@@ -398,10 +385,7 @@ class _MeasurementCard extends StatelessWidget {
           // Refeição
           Text(
             'Refeição: $mealLabel',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black87,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.black87),
           ),
 
           // Insulina (somente quando informada)
@@ -409,10 +393,7 @@ class _MeasurementCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Insulina: ${model.insulin} unidades',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ],
 
@@ -421,10 +402,7 @@ class _MeasurementCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Carboidratos: ${model.carbs} g',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ],
 
@@ -433,10 +411,7 @@ class _MeasurementCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               'Observações: ${model.notes}',
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.black87,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.black87),
             ),
           ],
         ],
@@ -444,6 +419,7 @@ class _MeasurementCard extends StatelessWidget {
     );
   }
 }
+
 
 
 
