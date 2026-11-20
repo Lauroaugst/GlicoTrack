@@ -549,22 +549,47 @@ double getX(DateTime measuredAt) {
   return leftOffset + percent.clamp(0.0, 1.0) * graphWidth;
 }
     // Eixo X
-    final days = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
-    final double stepX = graphWidth / (days.length - 1);
+    // Eixo X - datas do período selecionado
+const int divisions = 6;
 
-    for (int i = 0; i < days.length; i++) {
-      final xPos = leftOffset + (i * stepX);
-      canvas.drawLine(Offset(xPos, 0), Offset(xPos, graphHeight), linePaint);
+for (int i = 0; i <= divisions; i++) {
+  final fraction = i / divisions;
 
-      final textPainter = TextPainter(
-        text: TextSpan(text: days[i], style: textStyleX),
-        textDirection: TextDirection.ltr,
-      )..layout();
-      textPainter.paint(
-        canvas,
-        Offset(xPos - (textPainter.width / 2), graphHeight + 8),
-      );
-    }
+  final xPos = leftOffset + fraction * graphWidth;
+
+  final timestamp = startDate.add(
+    Duration(
+      milliseconds: (totalMilliseconds * fraction).round(),
+    ),
+  );
+
+  final label =
+      '${timestamp.day.toString().padLeft(2, '0')}/'
+      '${timestamp.month.toString().padLeft(2, '0')}';
+
+  canvas.drawLine(
+    Offset(xPos, 0),
+    Offset(xPos, graphHeight),
+    linePaint,
+  );
+
+  final textPainter = TextPainter(
+    text: TextSpan(
+      text: label,
+      style: textStyleX,
+    ),
+    textDirection: TextDirection.ltr,
+  )..layout();
+
+  textPainter.paint(
+    canvas,
+    Offset(
+      xPos - textPainter.width / 2,
+      graphHeight + 8,
+    ),
+  );
+}
+
 
     // Linha de Conexão
     if (readings.isEmpty) return;
