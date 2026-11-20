@@ -120,9 +120,13 @@ Future<void> _loadRecords() async {
         dateLabel: dateLabel,
         time: time,
         glucoseValue: glucose,
-        contextTag: 'Glicemia',
+         contextTag: 'Glicemia',
         status: status,
-      );
+        insulin: record.insulin,
+        carbs: record.carbs,
+  notes: record.notes,
+  meal: record.meal,
+);
     }).toList();
 
     if (!mounted) return;
