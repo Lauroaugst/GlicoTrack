@@ -15,6 +15,10 @@ class MeasurementModel {
   final int glucoseValue;
   final String contextTag; // Ex: 'Pós-Refeição'
   final GlucoseLevelStatus status;
+  final double? insulin;
+  final double? carbs;
+  final String notes;
+  final String meal;
 
   const MeasurementModel({
     required this.id,
@@ -23,6 +27,10 @@ class MeasurementModel {
     required this.glucoseValue,
     required this.contextTag,
     required this.status,
+    this.insulin,
+    this.carbs,
+    this.notes = '',
+    this.meal = '',
   });
 
   Color get statusColor {
