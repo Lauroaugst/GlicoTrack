@@ -277,7 +277,10 @@ Widget build(BuildContext context) {
             const SizedBox(height: 24),
 
             // Botões de Ação (Repassando o summary com a data certa)
-            _ActionButtonsRow(summary: currentSummary),
+            _ActionButtonsRow(
+                 summary: currentSummary,
+                 localDatabase: widget.localDatabase,
+            ),
           ],
         ),
       ),
@@ -717,9 +720,12 @@ class _SummaryRow extends StatelessWidget {
 /// Row contendo os botões (agora recebendo o contexto das datas)
 class _ActionButtonsRow extends StatelessWidget {
   final WeeklySummaryModel summary;
+  final LocalDatabase localDatabase;
 
-  const _ActionButtonsRow({required this.summary});
-
+  const _ActionButtonsRow({
+    required this.summary,
+    required this.localDatabase,
+  });
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -741,7 +747,11 @@ class _ActionButtonsRow extends StatelessWidget {
             icon: Icons.list_alt_rounded,
             onTap: () {
               Navigator.of(context).push(
-                MaterialPageRoute(builder: (context) => const TimelineScreen()),
+                MaterialPageRoute(
+                  builder: (context) => TimelineScreen(
+                    localDatabase: localDatabase,
+                  ),
+                ),
               );
             },
           ),
