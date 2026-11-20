@@ -35,7 +35,7 @@ class _MainScreenState extends State<MainScreen> {
   localDatabase: widget.localDatabase,
       ),
       const ProfileHubScreen(),
-      const HistoryScreen(),
+      HistoryScreen(localDatabase: widget.localDatabase),
     ];
   }
 
