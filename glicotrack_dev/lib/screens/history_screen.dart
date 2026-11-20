@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:glicotrack_dev/data/local_database.dart';
+import 'package:glicotrack_dev/domain/models.dart';
 import 'timeline_screen.dart'; // Import da tela da Linha do Tempo
 import '../services/pdf_service.dart'; // Import do gerador de PDF
 
@@ -93,6 +94,48 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
+  List<HealthRecord> _records = [];
+  bool _isLoading = true;
+  String? _loadError;
+  Future<void> _loadRecords() async {
+  setState(() {
+    _isLoading = true;
+    _loadError = null;
+  });
+
+  try {
+    final documents = await widget.localDatabase.all(kind: 'record');
+
+    final records = documents
+        .where((doc) => !doc.deleted)
+        .map(
+          (doc) => HealthRecord.fromJson(
+            doc.id,
+            doc.uid,
+            doc.payload,
+          ),
+        )
+        .toList();
+
+    records.sort(
+      (a, b) => b.measuredAt.compareTo(a.measuredAt),
+    );
+
+    if (!mounted) return;
+
+    setState(() {
+      _records = records;
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      _loadError = 'Não foi possível carregar os registros.';
+      _isLoading = false;
+    });
+  }
+}
   // Define o período inicial como a última semana até hoje
   late DateTimeRange _selectedDateRange;
 
@@ -140,11 +183,74 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    // Carrega o mock com base nas datas selecionadas
-    final currentSummary = HistoryMockData.generateDataForRange(
-      _selectedDateRange,
+Widget build(BuildContext context) {
+  final recordsInRange = _records.where((record) {
+    final date = record.measuredAt.toLocal();
+
+    final start = DateTime(
+      _selectedDateRange.start.year,
+      _selectedDateRange.start.month,
+      _selectedDateRange.start.day,
     );
+
+    final end = DateTime(
+      _selectedDateRange.end.year,
+      _selectedDateRange.end.month,
+      _selectedDateRange.end.day,
+      23, 59, 59, 999,
+    );
+
+    return !date.isBefore(start) && !date.isAfter(end);
+  }).toList();
+
+  final values = recordsInRange
+      .map((record) => record.glucose.toDouble())
+      .toList();
+
+  final average = values.isEmpty
+      ? 0.0
+      : values.reduce((a, b) => a + b) / values.length;
+
+  final minimum = values.isEmpty
+      ? 0.0
+      : values.reduce((a, b) => a < b ? a : b);
+
+  final maximum = values.isEmpty
+      ? 0.0
+      : values.reduce((a, b) => a > b ? a : b);
+
+  final start = _selectedDateRange.start;
+  final end = _selectedDateRange.end;
+
+  final dateRange =
+      '${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')} até '
+      '${end.day.toString().padLeft(2, '0')}/${end.month.toString().padLeft(2, '0')}';
+
+  final currentSummary = WeeklySummaryModel(
+    dateRange: dateRange,
+    average: average,
+    min: minimum,
+    max: maximum,
+    readings: recordsInRange.map((record) {
+      final date = record.measuredAt.toLocal();
+
+      const weekdays = [
+        'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM',
+      ];
+
+      final glucose = record.glucose.toDouble();
+
+      return GlucoseReading(
+        day: weekdays[date.weekday - 1],
+        value: glucose,
+        color: glucose < 70
+            ? const Color(0xFFF44336)
+            : glucose > 180
+                ? const Color(0xFFFF9800)
+                : const Color(0xFF4CAF50),
+      );
+    }).toList(),
+  );
 
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
@@ -219,6 +325,29 @@ class _WeeklyChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          if (_isLoading)
+  const Padding(
+    padding: EdgeInsets.only(bottom: 16),
+    child: CircularProgressIndicator(),
+  ),
+
+if (_loadError != null)
+  Padding(
+    padding: const EdgeInsets.only(bottom: 16),
+    child: Text(
+      _loadError!,
+      style: const TextStyle(color: Colors.red),
+    ),
+  ),
+
+if (!_isLoading && _loadError == null && recordsInRange.isEmpty)
+  const Padding(
+    padding: EdgeInsets.only(bottom: 16),
+    child: Text(
+      'Nenhum registro encontrado para o período selecionado.',
+      textAlign: TextAlign.center,
+    ),
+  ),
           // Título
           const Text(
             'Desempenho Glicêmico',
