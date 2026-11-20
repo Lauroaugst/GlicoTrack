@@ -54,57 +54,85 @@ class TimelineScreen extends StatefulWidget {
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
-  // Inicialização com os dados de exemplo, gerenciados em estado local
-  // para simular a reatividade da remoção dos dados.
-  List<MeasurementModel> _measurements = [
-    const MeasurementModel(
-      id: '1',
-      dateLabel: 'Hoje',
-      time: '09:41',
-      glucoseValue: 62,
-      contextTag: 'Pós-Refeição',
-      status: GlucoseLevelStatus.low,
-    ),
-    const MeasurementModel(
-      id: '2',
-      dateLabel: 'Ontem',
-      time: '19:41',
-      glucoseValue: 123,
-      contextTag: 'Pós-Refeição',
-      status: GlucoseLevelStatus.normal,
-    ),
-    const MeasurementModel(
-      id: '3',
-      dateLabel: '26/08/26',
-      time: '09:41',
-      glucoseValue: 187,
-      contextTag: 'Pós-Refeição',
-      status: GlucoseLevelStatus.high,
-    ),
-    const MeasurementModel(
-      id: '4',
-      dateLabel: '25/08/26',
-      time: '09:41',
-      glucoseValue: 68,
-      contextTag: 'Pós-Refeição',
-      status: GlucoseLevelStatus.low,
-    ),
-  ];
+  
+  List<MeasurementModel> _measurements = [];
 
-  /// Apaga os dados após confirmação
-  void _clearAllData() {
-    setState(() {
-      _measurements.clear();
-    });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Todos os dados foram excluídos com sucesso!'),
-        backgroundColor: Colors.redAccent,
-      ),
+bool _isLoading = true;
+String? _loadError;@override
+void initState() {
+  super.initState();
+  _loadRecords();
+}
+Future<void> _loadRecords() async {
+  setState(() {
+    _isLoading = true;
+    _loadError = null;
+    
+  });
+
+  try {
+    final documents = await widget.localDatabase.all(kind: 'record');
+
+    final records = documents
+        .where((doc) => !doc.deleted)
+        .map(
+          (doc) => HealthRecord.fromJson(
+            doc.id,
+            doc.uid,
+            doc.payload,
+          ),
+        )
+        .toList();
+
+    records.sort(
+      (a, b) => b.measuredAt.compareTo(a.measuredAt),
     );
-  }
 
-  /// Diálogo para confirmação do processo de exclusão
+    final measurements = records.map((record) {
+      final date = record.measuredAt.toLocal();
+      final glucose = record.glucose;
+
+      final dateLabel =
+          '${date.day.toString().padLeft(2, '0')}/'
+          '${date.month.toString().padLeft(2, '0')}/'
+          '${date.year}';
+
+      final time =
+          '${date.hour.toString().padLeft(2, '0')}:'
+          '${date.minute.toString().padLeft(2, '0')}';
+
+      final status = glucose < 70
+          ? GlucoseLevelStatus.low
+          : glucose > 180
+              ? GlucoseLevelStatus.high
+              : GlucoseLevelStatus.normal;
+
+      return MeasurementModel(
+        id: record.id,
+        dateLabel: dateLabel,
+        time: time,
+        glucoseValue: glucose,
+        contextTag: 'Glicemia',
+        status: status,
+      );
+    }).toList();
+
+    if (!mounted) return;
+
+    setState(() {
+      _measurements = measurements;
+      _isLoading = false;
+    });
+  } catch (e) {
+    if (!mounted) return;
+
+    setState(() {
+      _loadError = 'Não foi possível carregar os registros.';
+      _isLoading = false;
+    });
+  }
+}
+  
   Future<void> _showDeleteConfirmationDialog() async {
     return showDialog<void>(
       context: context,
@@ -200,8 +228,21 @@ class _TimelineScreenState extends State<TimelineScreen> {
 
                       // Lista de Itens Rolável
                       Expanded(
-                        child: _measurements.isEmpty
-                            ? const Center(
+                        child: _isLoading
+    ? const Center(
+        child: CircularProgressIndicator(
+          color: Colors.white,
+        ),
+      )
+    : _loadError != null
+        ? Center(
+            child: Text(
+              _loadError!,
+              style: const TextStyle(color: Colors.white),
+            ),
+          )
+        : _measurements.isEmpty
+            ? const Center(
                                 child: Text(
                                   'Nenhum registro encontrado.',
                                   style: TextStyle(
