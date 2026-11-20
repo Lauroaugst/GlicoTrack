@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:glicotrack_dev/data/local_database.dart';
 import 'timeline_screen.dart'; // Import da tela da Linha do Tempo
 import '../services/pdf_service.dart'; // Import do gerador de PDF
 
@@ -80,7 +81,12 @@ abstract class HistoryMockData {
 // ============================================================================
 
 class HistoryScreen extends StatefulWidget {
-  const HistoryScreen({super.key});
+  final LocalDatabase localDatabase;
+
+  const HistoryScreen({
+    super.key,
+    required this.localDatabase,
+  });
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
