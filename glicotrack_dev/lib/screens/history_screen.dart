@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'dart:async';
 import 'package:glicotrack_dev/data/local_database.dart';
 import 'package:glicotrack_dev/domain/models.dart';
 import 'timeline_screen.dart'; // Import da tela da Linha do Tempo
@@ -13,11 +14,13 @@ class GlucoseReading {
   final String day;
   final double value;
   final Color color;
+  final DateTime measuredAt;
 
   const GlucoseReading({
     required this.day,
     required this.value,
     required this.color,
+    required this.measuredAt,
   });
 }
 
@@ -35,46 +38,6 @@ class WeeklySummaryModel {
     required this.max,
     required this.readings,
   });
-}
-
-abstract class HistoryMockData {
-  /// Gera os dados simulados baseados no período selecionado
-  static WeeklySummaryModel generateDataForRange(DateTimeRange range) {
-    // Formata as datas de forma simples (DD/MM - DD/MM)
-    final String formattedStart =
-        '${range.start.day.toString().padLeft(2, '0')}/${range.start.month.toString().padLeft(2, '0')}';
-    final String formattedEnd =
-        '${range.end.day.toString().padLeft(2, '0')}/${range.end.month.toString().padLeft(2, '0')}';
-
-    return WeeklySummaryModel(
-      dateRange: '$formattedStart até $formattedEnd',
-      average: 122.5,
-      min: 60.0,
-      max: 195.0,
-      readings: const [
-        GlucoseReading(
-          day: 'SEG',
-          value: 60.0,
-          color: Color(0xFFF44336),
-        ), // Hipoglicemia
-        GlucoseReading(
-          day: 'TER',
-          value: 195.0,
-          color: Color(0xFFFF9800),
-        ), // Hiperglicemia
-        GlucoseReading(
-          day: 'QUA',
-          value: 125.0,
-          color: Color(0xFF4CAF50),
-        ), // Alvo
-        GlucoseReading(
-          day: 'QUI',
-          value: 110.0,
-          color: Color(0xFF4CAF50),
-        ), // Alvo
-      ],
-    );
-  }
 }
 
 // ============================================================================
@@ -97,10 +60,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
   List<HealthRecord> _records = [];
   bool _isLoading = true;
   String? _loadError;
+  StreamSubscription<void>? _databaseSubscription;
   Future<void> _loadRecords() async {
   setState(() {
     _isLoading = true;
     _loadError = null;
+    
+
+    
   });
 
   try {
@@ -139,15 +106,29 @@ class _HistoryScreenState extends State<HistoryScreen> {
   // Define o período inicial como a última semana até hoje
   late DateTimeRange _selectedDateRange;
 
-  @override
-  void initState() {
-    super.initState();
-    final now = DateTime.now();
-    _selectedDateRange = DateTimeRange(
-      start: now.subtract(const Duration(days: 6)),
-      end: now,
-    );
-  }
+ @override
+void initState() {
+  super.initState();
+
+  final now = DateTime.now();
+
+  _selectedDateRange = DateTimeRange(
+    start: now.subtract(const Duration(days: 6)),
+    end: now,
+  );
+
+  _databaseSubscription = widget.localDatabase.changes.listen((_) {
+    _loadRecords();
+  });
+
+  _loadRecords();
+}
+
+@override
+void dispose() {
+  _databaseSubscription?.cancel();
+  super.dispose();
+}
 
   /// Exibe o seletor nativo de intervalo de datas (Material 3) com alto contraste
   Future<void> _pickDateRange() async {
@@ -241,14 +222,15 @@ Widget build(BuildContext context) {
       final glucose = record.glucose.toDouble();
 
       return GlucoseReading(
-        day: weekdays[date.weekday - 1],
-        value: glucose,
-        color: glucose < 70
-            ? const Color(0xFFF44336)
-            : glucose > 180
-                ? const Color(0xFFFF9800)
-                : const Color(0xFF4CAF50),
-      );
+  day: weekdays[date.weekday - 1],
+  value: glucose,
+  measuredAt: date,
+  color: glucose < 70
+      ? const Color(0xFFF44336)
+      : glucose > 180
+          ? const Color(0xFFFF9800)
+          : const Color(0xFF4CAF50),
+);
     }).toList(),
   );
 
@@ -283,10 +265,11 @@ Widget build(BuildContext context) {
         child: Column(
           children: [
             // Card do Gráfico (Agora com o Seletor de Data)
-            _WeeklyChartCard(
-              summary: currentSummary,
-              onDateRangeTap: _pickDateRange,
-            ),
+           _WeeklyChartCard(
+            summary: currentSummary,
+                onDateRangeTap: _pickDateRange,
+                  dateRange: _selectedDateRange,
+                ),
             const SizedBox(height: 16),
 
             // Card de Resumo Numérico
@@ -310,8 +293,13 @@ Widget build(BuildContext context) {
 class _WeeklyChartCard extends StatelessWidget {
   final WeeklySummaryModel summary;
   final VoidCallback onDateRangeTap;
+  final DateTimeRange dateRange;
 
-  const _WeeklyChartCard({required this.summary, required this.onDateRangeTap});
+  const _WeeklyChartCard({
+    required this.summary,
+    required this.onDateRangeTap,
+    required this.dateRange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -368,7 +356,10 @@ if (!_isLoading && _loadError == null && recordsInRange.isEmpty)
           const SizedBox(height: 24),
 
           // Gráfico de Alta Performance (CustomPainter com Zonas Alvo)
-          _GlucoseCustomChart(readings: summary.readings),
+         _GlucoseCustomChart(
+  readings: summary.readings,
+  dateRange: dateRange,
+),
         ],
       ),
     );
@@ -436,7 +427,12 @@ class _DateRangeSelectorButton extends StatelessWidget {
 /// Gráfico de Altíssima Performance (CustomPainter) com Zonas Médicas
 class _GlucoseCustomChart extends StatelessWidget {
   final List<GlucoseReading> readings;
-  const _GlucoseCustomChart({required this.readings});
+  final DateTimeRange dateRange;
+
+  const _GlucoseCustomChart({
+    required this.readings,
+    required this.dateRange,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +440,10 @@ class _GlucoseCustomChart extends StatelessWidget {
       label: 'Gráfico visual de linha exibindo as tendências de glicemia no período.',
       child: CustomPaint(
         size: const Size(double.infinity, 240),
-        painter: GlucoseMedicalChartPainter(readings: readings),
+        painter: GlucoseMedicalChartPainter(
+          readings: readings,
+          dateRange: dateRange,
+        ),
       ),
     );
   }
@@ -452,13 +451,17 @@ class _GlucoseCustomChart extends StatelessWidget {
 
 class GlucoseMedicalChartPainter extends CustomPainter {
   final List<GlucoseReading> readings;
+  final DateTimeRange dateRange;
 
   final double limitHypo = 70.0;
   final double limitHyper = 180.0;
   final double chartMaxY = 300.0;
   final double chartMinY = 20.0;
 
-  GlucoseMedicalChartPainter({required this.readings});
+  GlucoseMedicalChartPainter({
+  required this.readings,
+  required this.dateRange,
+});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -522,7 +525,29 @@ class GlucoseMedicalChartPainter extends CustomPainter {
         ),
       );
     }
+    final startDate = DateTime(
+  dateRange.start.year,
+  dateRange.start.month,
+  dateRange.start.day,
+);
 
+final endDate = DateTime(
+  dateRange.end.year,
+  dateRange.end.month,
+  dateRange.end.day,
+).add(const Duration(days: 1));
+
+final totalMilliseconds =
+    endDate.difference(startDate).inMilliseconds;
+
+double getX(DateTime measuredAt) {
+  final elapsedMilliseconds =
+      measuredAt.toLocal().difference(startDate).inMilliseconds;
+
+  final percent = elapsedMilliseconds / totalMilliseconds;
+
+  return leftOffset + percent.clamp(0.0, 1.0) * graphWidth;
+}
     // Eixo X
     final days = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM'];
     final double stepX = graphWidth / (days.length - 1);
@@ -553,11 +578,15 @@ class GlucoseMedicalChartPainter extends CustomPainter {
     final Path path = Path();
     final List<Offset> points = [];
 
-    for (var reading in readings) {
-      final dayIndex = days.indexOf(reading.day);
-      if (dayIndex == -1) continue;
-      points.add(Offset(leftOffset + (dayIndex * stepX), getY(reading.value)));
-    }
+    final sortedReadings = List<GlucoseReading>.from(readings)
+  ..sort((a, b) => a.measuredAt.compareTo(b.measuredAt));
+
+for (final reading in sortedReadings) {
+  final x = getX(reading.measuredAt);
+  final y = getY(reading.value);
+
+  points.add(Offset(x, y));
+}
 
     if (points.isNotEmpty) {
       path.moveTo(points.first.dx, points.first.dy);
@@ -580,7 +609,7 @@ class GlucoseMedicalChartPainter extends CustomPainter {
         points[i],
         5.0,
         Paint()
-          ..color = readings[i].color
+          ..color = sortedReadings[i].color
           ..style = PaintingStyle.fill,
       );
     }
