@@ -298,6 +298,7 @@ class _TimelineHeader extends StatelessWidget {
   }
 }
 
+
 class _MeasurementCard extends StatelessWidget {
   final MeasurementModel model;
 
@@ -305,6 +306,13 @@ class _MeasurementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mealLabel = switch (model.meal) {
+      'breakfast' => 'Café da manhã',
+      'lunch' => 'Almoço',
+      'dinner' => 'Jantar',
+      _ => 'Não informada',
+    };
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -314,6 +322,7 @@ class _MeasurementCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Data da medição
           Text(
             model.dateLabel,
             style: const TextStyle(
@@ -322,7 +331,10 @@ class _MeasurementCard extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
+
           const SizedBox(height: 12),
+
+          // Horário, glicemia e indicador
           Row(
             children: [
               Text(
@@ -333,6 +345,7 @@ class _MeasurementCard extends StatelessWidget {
                   color: Colors.black54,
                 ),
               ),
+
               const SizedBox(width: 12),
 
               Text(
@@ -344,8 +357,8 @@ class _MeasurementCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 8), // Espaçamento mínimo de segurança
-              // O Expanded empurra os itens para a direita, mas respeita o limite da tela
+              const SizedBox(width: 8),
+
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -358,9 +371,9 @@ class _MeasurementCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
+
                     const SizedBox(width: 6),
-                    // O Flexible + ellipsis garante que se a tela for muito fina,
-                    // o texto "Pós-Refeição" vira "Pós-Ref..." em vez de causar erro.
+
                     Flexible(
                       child: Text(
                         model.contextTag,
@@ -376,41 +389,61 @@ class _MeasurementCard extends StatelessWidget {
               ),
             ],
           ),
+
+          // Separador das informações adicionais
+          const SizedBox(height: 12),
+          const Divider(height: 1),
+          const SizedBox(height: 12),
+
+          // Refeição
+          Text(
+            'Refeição: $mealLabel',
+            style: const TextStyle(
+              fontSize: 14,
+              color: Colors.black87,
+            ),
+          ),
+
+          // Insulina (somente quando informada)
+          if (model.insulin != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Insulina: ${model.insulin} unidades',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+
+          // Carboidratos (somente quando informados)
+          if (model.carbs != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Carboidratos: ${model.carbs} g',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+
+          // Observações (somente quando preenchidas)
+          if (model.notes.trim().isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              'Observações: ${model.notes}',
+              style: const TextStyle(
+                fontSize: 14,
+                color: Colors.black87,
+              ),
+            ),
+          ],
         ],
       ),
     );
   }
 }
 
-class _DeleteDataButton extends StatelessWidget {
-  final VoidCallback onPressed;
 
-  const _DeleteDataButton({required this.onPressed});
 
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-      child: SizedBox(
-        width: double.infinity,
-        height: 54,
-        child: ElevatedButton.icon(
-          onPressed: onPressed,
-          icon: const Icon(Icons.delete_outline, size: 24),
-          label: const Text(
-            'Excluir Meus Dados',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.white,
-            foregroundColor: const Color(0xFF0060C0),
-            elevation: 0,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
