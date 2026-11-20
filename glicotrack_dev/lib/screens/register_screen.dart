@@ -170,7 +170,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
       'record',
       record.toJson(),
     );
+    final savedDocuments = await widget.localDatabase.all(pendingOnly: false);
 
+      debugPrint(
+        'GlicoTrack: ${savedDocuments.length} documento(s) '
+        'encontrado(s) imediatamente após salvar.',
+      );
     if (!mounted) return;
 
     // 9. Exibe sucesso somente após salvar no SQLite.
