@@ -68,7 +68,7 @@ class LocalDatabase implements LocalRepository {
 
   static Future<void> configure(Database db) async {
     await db.execute('PRAGMA foreign_keys = ON');
-    await db.execute('PRAGMA secure_delete = ON');
+    await db.rawQuery('PRAGMA secure_delete = ON');
   }
 
   static Future<void> createSchema(Database db, int version) async {

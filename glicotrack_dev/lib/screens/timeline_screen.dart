@@ -293,15 +293,29 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                       _MeasurementCard(
                                         model: measurements[index],
                                       ),
+                                      const SizedBox(height: 8),
                                       Container(
-                                        color: Colors.white,
+                                        padding: const EdgeInsets.only(
+                                          top: 12,
+                                          left: 12,
+                                          right: 12,
+                                          bottom: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.circular(
+                                            16,
+                                          ),
+                                        ),
                                         child: Column(
                                           children: [
                                             Text(
                                               'Refeição: ${mealLabel(record.meal)}',
                                             ),
+                                            const SizedBox(height: 4),
                                             Text(
                                               '${store.settings.classify(record.glucose).label} • Insulina: ${record.insulin ?? '--'} U • Carboidratos: ${record.carbs ?? '--'} g',
+                                              textAlign: TextAlign.center,
                                             ),
                                             if (record.notes.isNotEmpty)
                                               Padding(
