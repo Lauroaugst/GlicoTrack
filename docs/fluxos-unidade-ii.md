@@ -7,7 +7,7 @@ flowchart LR
   pessoa[Paciente ou cuidador]
   profissional[Profissional de saúde]
   firebase[Firebase Auth / Firestore]
-  pessoa --> cadastro([Cadastrar / entrar / recuperar senha])
+  pessoa --> inicio([Abrir as telas existentes com sessão automática])
   pessoa --> registro([Registrar glicemia, dose e carboidratos offline])
   pessoa --> editar([Consultar, filtrar, editar e excluir medições])
   pessoa --> metas([Editar perfil e metas])
@@ -15,8 +15,8 @@ flowchart LR
   pessoa --> exportar([Exportar PDF e CSV])
   exportar --> profissional
   pessoa --> backup([Sincronizar e restaurar])
-  pessoa --> excluir([Excluir conta com senha recente])
-  cadastro --> firebase
+  pessoa --> excluir([Confirmar exclusão dos próprios dados])
+  inicio --> firebase
   backup --> firebase
   excluir --> servidor[Callable autenticada: bloquear, excluir e impedir reenvio]
   registro --> validar[Validar e persistir SQLite criptografado]
@@ -33,14 +33,10 @@ flowchart TD
   boot -->|configuração ausente ou inválida| configurar[Mensagem de configuração / tentar novamente]
   configurar --> boot
   boot --> sessao{Sessão Firebase persistida?}
-  sessao -->|não| login[Login]
-  login --> cadastro[Cadastro]
-  login --> recuperar[Recuperar senha]
-  cadastro --> login
-  recuperar --> login
-  login -->|autenticado| local[Abrir SQLCipher e carregar UID]
+  sessao -->|não| anonima[Criar sessão anônima com internet]
+  anonima --> local[Abrir SQLCipher e carregar UID]
   sessao -->|sim| local
-  local -->|falha de armazenamento| tentar[Tentar novamente / sair]
+  local -->|falha de armazenamento| tentar[Tentar novamente]
   tentar --> local
   local --> abas[MainScreen: Home / Registro / Perfil / Histórico]
   abas --> home[Home: resumo real e frequência]
@@ -59,15 +55,13 @@ flowchart TD
   perfil --> faixa[Meta glicêmica personalizada]
   perfil --> seguranca[Segurança e Dados]
   seguranca --> backup[Backup / restauração]
-  seguranca --> exclusao[Senha recente e exclusão]
-  perfil --> sair[Sair]
-  sair --> login
-  exclusao -->|sucesso| login
+  seguranca --> exclusao[Confirmação de exclusão]
+  exclusao -->|sucesso| anonima
   exclusao -->|falha após bloqueio| pendente[Exclusão pendente; fila bloqueada e retentativa]
 ```
 
-A Splash apenas mostra a marca enquanto inicializa. Não encaminha diretamente à MainScreen. O Navigator da conta é destruído no logout, evitando retorno a dados por meio do botão voltar.
+A Splash mostra a marca enquanto inicializa. A sessão persistida é reutilizada, inclusive offline; na primeira abertura, a criação anônima exige internet e permite nova tentativa em caso de falha. Em seguida são abertas as quatro abas existentes, sem tela de login. O Navigator é vinculado ao UID e descartado quando a sessão muda após exclusão.
 
 Não há confirmação extra no salvamento. O teclado oferece ação de conclusão; com o teclado visível, o botão original de salvar aparece em área fixa para continuar acessível. Data/hora, refeição e categoria têm valores iniciais, que podem ser alterados. A fonte ampliada, cores, componentes e quatro abas permanecem alinhados ao frontend existente. O fundo da tela de registro muda conforme a classificação, além do texto explícito. A meta inferior nunca altera o limiar fixo de hipoglicemia.
 
-Sessões anônimas criadas pela versão anterior são encaminhadas para o login. Criar conta vincula e-mail/senha ao UID existente para preservar os registros; entrar em outra conta consulta os dados dessa conta. AppBootstrap é reutilizado após a verificação da sessão, com uma única sincronização por Provider.
+Sessões anônimas existentes conservam o UID e seus registros. AppBootstrap é reutilizado após a verificação da sessão, com uma única sincronização por Provider. A confirmação de exclusão não exige senha de uma sessão anônima; contas com senha já persistidas conservam a exigência de senha recente. Sem vínculo de conta, a restauração só alcança o UID atual, não uma instalação nova ou outro aparelho.

@@ -24,7 +24,7 @@ service cloud.firestore {
           && p.keys().hasOnly(['name','email','createdAt','age','weight','photo'])
           && p.keys().hasAll(['name','email','createdAt','age','weight','photo'])
           && p.name is string && p.name.size() > 0 && p.name.size() <= 120
-          && p.email is string && p.email == request.auth.token.email
+          && p.email is string && p.email == request.auth.token.get('email', '')
           && p.createdAt is int
           && (p.age == null || (p.age is int && p.age >= 0 && p.age <= 130))
           && (p.weight == null || (p.weight is number && p.weight > 0 && p.weight <= 700))

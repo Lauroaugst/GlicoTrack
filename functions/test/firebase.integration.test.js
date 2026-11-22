@@ -24,23 +24,24 @@ test('callable rejects unauthenticated deletion', async () => {
   });
   assert.equal(response.status,401);
 });
-test('linking the previous anonymous session preserves UID and its records', async () => {
+test('anonymous session can delete its own data without password and preserves another session', async () => {
   const response = await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:signUp?key=demo-key`, {
     method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({returnSecureToken:true}),
   });
   assert.equal(response.status,200);
   const guest = await response.json();
-  await db.doc(`users/${guest.localId}/documents/migration-test`).set({dummy:true});
-  const linkedResponse = await fetch(`http://${process.env.FIREBASE_AUTH_EMULATOR_HOST}/identitytoolkit.googleapis.com/v1/accounts:update?key=demo-key`, {
-    method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
-      idToken:guest.idToken,email:`linked-${Date.now()}@example.com`,password:'Test-password-2026!',returnSecureToken:true,
-    }),
+  const other = await signup(`other-${Date.now()}@example.com`);
+  await db.doc(`users/${guest.localId}/documents/test`).set({dummy:true});
+  await db.doc(`users/${other.localId}/documents/test`).set({dummy:true});
+  const deletion = await fetch(`${functionsOrigin}/${project}/us-central1/deleteMyAccount`, {
+    method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${guest.idToken}`},body:JSON.stringify({data:{uid:other.localId}}),
   });
-  assert.equal(linkedResponse.status,200);
-  const linked = await linkedResponse.json();
-  assert.equal(linked.localId,guest.localId);
-  assert.equal((await db.doc(`users/${linked.localId}/documents/migration-test`).get()).exists,true);
-  assert.equal((await auth.getUser(linked.localId)).providerData[0].providerId,'password');
+  assert.equal(deletion.status,200,await deletion.text());
+  await assert.rejects(auth.getUser(guest.localId),{code:'auth/user-not-found'});
+  assert.equal((await db.collection(`users/${guest.localId}/documents`).get()).size,0);
+  assert.equal((await db.doc(`users/${other.localId}/documents/test`).get()).exists,true);
+  assert.equal((await auth.getUser(other.localId)).uid,other.localId);
+  assert.equal((await db.doc(`deletionRequests/${guest.localId}`).get()).data().state,'completed');
 });
 test('authenticated callable deletes own nested data and auth, preserves another account and blocks stale data', async () => {
   const suffix = Date.now();

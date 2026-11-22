@@ -2,9 +2,11 @@
 
 ## Escopo
 
-Transformar o frontend existente em diário funcional de glicemia, insulina e carboidratos, com sessão Firebase, SQLite criptografado como armazenamento principal, sincronização/backup Firestore, metas, filtros, indicadores e portabilidade. Preservar Home, Registro, Perfil e Histórico. Incluir login como fluxo de entrada, não como quinta aba.
+Transformar o frontend existente em diário funcional de glicemia, insulina e carboidratos, com sessão Firebase automática, SQLite criptografado como armazenamento principal, sincronização/backup Firestore, metas, filtros, indicadores e portabilidade. Preservar Home, Registro, Perfil, Histórico e as telas secundárias já desenvolvidas pela equipe, sem criar telas de login, cadastro ou recuperação de senha. A sessão anônima é criada em segundo plano somente se não houver uma sessão persistida.
 
-Fora do escopo atual: prescrição/cálculo de dose, diagnóstico, integração com glicosímetros, prontuário compartilhado entre contas, notificações programadas, execução de sincronização com processo encerrado e certificação regulatória. A revisão clínica e jurídica e a configuração de produção dependem do grupo e dos responsáveis pelo produto.
+Fora do escopo atual: diagnóstico, integração com glicosímetros, prontuário compartilhado entre contas, notificações programadas, execução de sincronização com processo encerrado e certificação regulatória. A revisão clínica e jurídica e a configuração de produção dependem do grupo e dos responsáveis pelo produto.
+
+Definição pendente: o objetivo do estudo de caso, página 1, menciona cálculo de insulina baseado nas diretrizes da SBD. Os PDFs não fornecem fórmula, parâmetros individuais ou fluxo de cálculo, e as telas existentes registram doses já aplicadas. O registro está implementado; o cálculo não pode ser declarado atendido nem descartado como dispensável sem esclarecimento com a disciplina. Não foi inventada uma regra de dose.
 
 ## EAP simplificada
 

@@ -260,6 +260,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final status = value != null && value > 0
         ? store.settings.classify(value)
         : null;
+    final statusColor = status == null ? null : glucoseColor(status);
+    final headerForeground =
+        status == GlucoseStatus.hyper || status == GlucoseStatus.belowTarget
+        ? Colors.black87
+        : Colors.white;
     return Scaffold(
       bottomNavigationBar: keyboardVisible
           ? SafeArea(
@@ -275,19 +280,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             )
           : null,
-      // Fundo azul claro padrão do app
-      backgroundColor: status == null
-          ? const Color(0xFFE3F1FD)
-          : glucoseColor(status),
+      backgroundColor: statusColor ?? const Color(0xFFE3F1FD),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0060C0),
+        backgroundColor: statusColor ?? const Color(0xFF0060C0),
+        foregroundColor: headerForeground,
         elevation: 3,
         shadowColor: Colors.black45,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'Novo Registro',
           style: TextStyle(
-            color: Colors.white,
+            color: headerForeground,
             fontSize: 24,
             fontWeight: FontWeight.w600,
           ),
@@ -303,7 +306,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           child: Container(
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: statusColor == null
+                  ? Colors.white
+                  : Color.alphaBlend(
+                      statusColor.withValues(alpha: 0.15),
+                      Colors.white,
+                    ),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: Colors.black12, width: 1.5),
             ),

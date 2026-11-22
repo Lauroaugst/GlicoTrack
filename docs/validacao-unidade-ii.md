@@ -1,6 +1,25 @@
 # Relatório de implementação e validação - Unidade II
 
-> A validação inicial abaixo é de 17/11/2026. A seção final registra a integração com a main e os resultados de 21/11/2026.
+> As seções históricas abaixo registram 17/11 e 21/11/2026. A conferência dos PDFs e os testes de 22/11 estão registrados a seguir.
+
+## Conferência dos PDFs e validação - 22/11/2026
+
+Os dois PDFs foram reabertos, seu texto foi extraído e as páginas do enunciado/aditivo foram renderizadas e inspecionadas. A rastreabilidade está em `matriz-rastreabilidade.md`, com a exceção de escopo explicitamente definida para esta versão: somente telas já desenvolvidas pela equipe, sem login, cadastro, recuperação ou logout. O fluxo atual reutiliza a sessão Firebase persistida ou cria uma sessão anônima em segundo plano. `login_screen.dart`, acrescentado na integração, foi removido; o histórico e as telas da equipe foram preservados. Perfil sem e-mail e exclusão na confirmação existente foram adaptados, mantendo isolamento por UID e bloqueio contra reenvio. O formulário mantém as cores por classificação e os campos existentes.
+
+| Verificação desta revisão | Resultado |
+| --- | --- |
+| `flutter analyze --no-pub` | Sem apontamentos |
+| `flutter test --no-pub` | 45 testes aprovados, incluindo reutilização da sessão, criação anônima e falha de primeira conexão |
+| Emuladores Auth/Firestore/Functions, projeto `demo-glicotrack` | 15 testes aprovados, incluindo perfil sem e-mail, isolamento e exclusão da sessão anônima; nenhum acesso ao Firebase real |
+| `flutter build apk --debug --no-pub` | APK gerado com sucesso; avisos de versões AGP/Kotlin já conhecidos |
+| Celular via ADB | Nenhum dispositivo listado nesta conferência; execução nativa pendente |
+| Firebase CLI | Nenhuma conta autenticada; habilitação e implantação no projeto real não verificadas |
+
+Métricas de host desta execução: painter de 500 pontos, p50 **4,786 ms**, p95 **6,864 ms**; cinco commits SQLite FFI em arquivo: **16,457; 6,669; 8,815; 5,882; 6,009 ms** (total **43,832 ms**). São medições de CPU/FFI sob a metodologia descrita abaixo, com possível carga concorrente do host; não comprovam GPU, três segundos de interação, SQLCipher nativo nem aparelho de 2 GB.
+
+A primeira criação da sessão anônima exige internet; uma sessão persistida permite acesso local offline. Backup/restauração consultam somente o UID atual: reinstalação, limpeza de dados ou troca de aparelho não recuperam automaticamente a sessão anterior sem vínculo de conta. Nenhuma nova tela foi criada para contornar esse limite.
+
+Permanecem pendentes o aceite em dispositivo (criptografia, som, compartilhamento, cinco registros sem travar, tempo de abertura/registro), teste em hardware de 2 GB, conferência do Firebase real e compreensão/defesa pelo grupo. O objetivo do estudo de caso menciona cálculo de insulina, mas não define fórmula nem parâmetros: o registro de dose aplicada está implementado, e a regra de cálculo precisa de esclarecimento antes de ser implementada. Não é uma funcionalidade concluída. Nenhum novo commit, push ou deploy foi realizado nesta revisão.
 
 Trabalho iniciado em 16/11/2026 e finalizado em 17/11/2026 (São Paulo), diretamente no checkout existente, branch `main`, inicialmente limpo. Na entrega inicial, antes do versionamento parcial, não haviam sido feitos commits ou deploy de produção. O versionamento posterior e a integração estão registrados no histórico Git.
 
@@ -49,7 +68,7 @@ Windows 11, AMD Ryzen 5 5600X (6 núcleos), RAM física reportada de 51.449.614.
 
 Os testes Flutter cobrem classificação (incluindo 70 e meta personalizada), validação, serialização, estatísticas vazias, tendências, resolução determinística, CRUD SQLite, isolamento, restauração, edição durante upload, exclusão concorrente preservando edição intermediária, cinco inserções, falha remota sem perda local, tombstones, CSV, PDF vazio/extenso, posição cronológica e repintura, foco/alerta controlado, salvamento/falha e teclado inclusive na navegação principal.
 
-Os testes Firebase usam exclusivamente `demo-glicotrack` local. Comprovam bloqueio de acesso anônimo/de outra conta, rejeição de campos inválidos, timestamps de servidor, metas/perfil, imutabilidade idempotente de conflitos, bloqueio após exclusão e recusa de ressurreição. A integração invoca a callable com token emitido pelo emulador Auth, apaga registros/conflitos e a conta autenticada, preservando outra conta mesmo quando seu UID é enviado em payload malicioso. Mensagens `PERMISSION_DENIED` nos cenários negativos são esperadas.
+Os testes Firebase usam exclusivamente `demo-glicotrack` local. Comprovam bloqueio de acesso sem autenticação/de outra conta, rejeição de campos inválidos, timestamps de servidor, metas/perfil, imutabilidade idempotente de conflitos, bloqueio após exclusão e recusa de ressurreição. A integração invoca a callable com token emitido pelo emulador Auth, apaga registros/conflitos e a conta autenticada, preservando outra conta mesmo quando seu UID é enviado em payload malicioso. Mensagens `PERMISSION_DENIED` nos cenários negativos são esperadas.
 
 ## Métricas reais do host
 

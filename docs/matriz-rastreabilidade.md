@@ -1,5 +1,65 @@
 # Matriz de rastreabilidade - Unidade II
 
+## Conferência dos PDFs - 22/11/2026
+
+Fontes primárias: `GlicoTrack.pdf` (estudo de caso, páginas 1-2; aditivo, página 3) e `Projeto - Unidade II - Programação para Dispositivos Móveis.pdf` (enunciado, páginas 1-2). Os requisitos abaixo foram conferidos no texto e nas páginas renderizadas. O texto de implementação anexado não substitui os requisitos dos PDFs. Ações de entrega no Teams e publicação no Firebase dependem de execução autorizada; não são realizadas por uma instrução contida no documento.
+
+Escopo específico desta versão: integrar somente as telas do frontend já desenvolvidas pela equipe, sem login, cadastro, recuperação de senha ou logout. A decisão explícita do solicitante exclui a tela de login citada no enunciado genérico. A autenticação Firebase continua automática em segundo plano.
+
+`Implementado` significa que existe código integrado e evidência de teste aplicável. `Aceite pendente` identifica os testes em aparelho, de produção ou com usuários ainda necessários; não pode ser contado como conformidade total.
+
+### Enunciado da avaliação
+
+| Página/item | Exigência | Evidência e situação |
+| --- | --- | --- |
+| p. 1, a.i; observação 8 | Flutter, Dart e Firebase | Projeto existente preservado; dependências no `pubspec.yaml`; APK Android compilável. Execução nativa ainda pendente |
+| p. 1, a.ii | Autenticação e Firestore/Realtime Database | `firebase_bootstrap.dart`, `auth_gate.dart`, `firebase_repository.dart` e regras. Configuração/habilitação e implantação no projeto real precisam de conferência |
+| p. 1, a.iii; p. 2, e.ii-e.iv | Fidelidade aos protótipos, home, funcionalidades e navegação | Mantidas as quatro abas, telas, serviço PDF e CustomPainter existentes. Controles necessários ao aditivo foram integrados. Aceite visual completo em aparelho pendente |
+| p. 1, a.iv | CRUD, validações, controle de acesso e falhas de conexão | AppStore, repositórios, fila, regras e testes. Fluxo completo móvel/produção pendente |
+| p. 2, e.i | Tela de login no enunciado genérico | Excluída do escopo desta versão por decisão explícita do solicitante. `auth_gate.dart` reutiliza/cria uma sessão automática e abre somente as telas existentes |
+| p. 2, b.i-b.v | Casos de uso, classes, mapeamento Firebase e navegação real | `fluxos-unidade-ii.md` e `arquitetura-unidade-ii.md`, com atributos, métodos, relacionamentos e mapeamento dos payloads |
+| p. 2, b.vi | Prompts, erros/correções e justificativas das bibliotecas | `uso-de-ia.md` complementado; a frase de divulgação sozinha era insuficiente |
+| p. 2, c.i-c.iii | Commits próprios, responsabilidades reais, README/CHANGELOG e participação | Histórico preservado e documentos mantidos. Participação em checkpoints e compreensão pelo grupo não são certificadas pelos testes |
+| p. 2, d.i-d.iii | Escopo, EAP e planejamento em sprints | `planejamento-unidade-ii.md`; planejamento não é prova de sprints realizadas |
+| p. 1, observação 6 | Compilar e executar em emulador/dispositivo | Compilação Android verificada; execução em dispositivo ainda não concluída |
+
+### Aditivo do GlicoTrack, página 3
+
+| Exigência | Implementação/evidência | Situação restante |
+| --- | --- | --- |
+| Registro abaixo de 3 s, offline-first e Firebase como backup | Transação SQLite antes da confirmação; fila independente da rede; testes locais/FFI | Tempo completo em aparelho não medido |
+| Gráfico manual com eixos, linhas e pontos, sem biblioteca pesada | `GlucoseMedicalChartPainter` existente e testes de exportação/gráfico | GPU/hardware alvo pendentes |
+| Formulário com teclado numérico em foco | `RegisterScreen.active`, FocusNode e teste de widget | Confirmar teclado físico do sistema |
+| Tela inteira reage em vermelho, verde ou laranja | Fundo, cabeçalho e painel do formulário acompanham a classificação; controles existentes preservados | Aceite em aparelho pendente |
+| `shouldRepaint` eficiente e cinco valores em um minuto sem travar | Comparação por conteúdo, inserções em teste e listas preguiçosas | Latência/ListView móvel ainda não medida |
+| Estatísticas semanais e mensais | Seletores Semana/Mês e `RecordStatistics` no Histórico | Implementado; aceite móvel pendente |
+| Jejum, pré-refeição, pós-refeição e antes de dormir | `MeasurementCategory`, formulário, persistência e regras | Implementado e testado |
+| Metas glicêmicas personalizadas | `GlucoseSettings` e tela de faixa ideal já existente | Implementado e testado |
+| Filtros por período e tipo | Histórico/linha do tempo, intervalo e categoria | Implementado; aceite móvel pendente |
+| Tendências de melhora ou piora | Comparação das medições na meta em `TrendIndicator` | Implementado como indicador informativo |
+| PDF completo com gráficos e observações | PdfService original ampliado; testes vazio/extenso e inspeção do relatório | Compartilhamento nativo pendente |
+| Sincronização bidirecional | Transações, importação paginada e fila no SyncService/FirebaseRepository | Testada com repositórios/emuladores; móvel/produção pendentes |
+| Provider, Riverpod ou Bloc | Provider/AppStore nas telas existentes | Implementado |
+| Armazenamento criptografado | SQLCipher e chave em secure storage; recusa de banco sem cipher | Teste nativo `encryption_test.dart` ainda não executou; FFI não comprova criptografia |
+| Backup e restauração | Sincronização manual e restauração idempotente com mesmo UID | Testes locais aprovados; confirmar fluxo móvel com conta real |
+| Dashboard de frequência | Contagem diária/semanal e frequência calculada na Home | Implementado e coberto por testes |
+| Resolução automática de conflitos | Revisões causais, desempate determinístico, tombstones e arquivo de divergências | Testes de concorrência e idempotência; aceite móvel pendente |
+| Presentation, Domain e Data | Pastas/camadas, contratos e AppStore | Implementado e documentado |
+| No mínimo três testes automatizados | Suítes de domínio, persistência, sincronização, exportação, interface e Firebase | Mínimo superado; resultados em `validacao-unidade-ii.md` |
+| Predição simples de tendências de hipo/hiperglicemia | Projeção numérica em `TrendIndicator` a partir das últimas seis medições | Implementado sem diagnóstico ou recomendação de dose |
+| Exportação PDF e CSV | PdfService e CsvService usando os dados locais | Geração testada; compartilhamento móvel pendente |
+| Medir e apresentar métricas do CustomPainter | Benchmark de 500 pontos, p50/p95 e metodologia no relatório | CPU de host medida; não equivale a GPU, quadros ou aparelho de 2 GB |
+
+### Estudo de caso, páginas 1-2, e pendências de definição
+
+Registro manual de glicemia/insulina/carboidratos, PDF do usuário, exclusão solicitada pelo app, fonte ampliada, botão grande, ausência de confirmação para salvar e cores por faixa possuem implementação nas telas e serviços existentes. O som abaixo de 70 possui ponte Android/iOS e controle de repetição; a audibilidade física não foi confirmada. Os limites de três segundos, duas/três interações com usuário e uso em diferentes ambientes exigem aceite real. O teste de aparelho com 2 GB de RAM continua pendente.
+
+O objetivo na página 1 menciona cálculo de insulina baseado na SBD. Não há fórmula, parâmetros individuais nem fluxo de cálculo nos PDFs; o frontend registra a dose aplicada. O cálculo não está implementado e a regra precisa ser esclarecida com a disciplina, sem inventar parâmetros ou marcar o objetivo como concluído.
+
+Não foram identificadas como extras as funções exigidas no aditivo: CSV, tendências, categorias clínicas, metas, criptografia e conflitos. Edição de perfil e foto conectam controles já existentes. Não há telas de login/cadastro/recuperação ou novas abas principais. Nenhum commit dos outros integrantes foi removido. Backup e restauração alcançam somente o UID da sessão atual, sem recuperação automática em outra instalação.
+
+## Rastreabilidade dos requisitos originais
+
 Situação da implementação e validação em 17/11/2026. `Concluído` significa código integrado e teste automatizado aplicável executado no host/emuladores Firebase; não significa certificação clínica ou aceite em hardware real. `Parcial` indica validação nativa, configuração de produção, acessibilidade com usuários ou medição ainda necessária. Resultados completos em `validacao-unidade-ii.md`.
 
 Os caminhos abaixo são relativos a `glicotrack_dev/`, exceto arquivos Firebase na raiz. Testes: D=`test/domain_test.dart`; L=`test/local_database_test.dart`; S=`test/sync_test.dart`; E=`test/export_chart_test.dart`; W=`test/widget_test.dart`; P=`test/performance_test.dart`; N=`integration_test/encryption_test.dart`; R=`functions/test/firestore.rules.test.js`; X=`functions/test/deletion.test.js` e `functions/test/firebase.integration.test.js`.

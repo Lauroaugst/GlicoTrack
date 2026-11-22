@@ -7,9 +7,12 @@ const {deleteUserData} = require('./deletion');
 initializeApp();
 
 exports.deleteMyAccount = onCall({region: 'us-central1', timeoutSeconds: 120, memory: '256MiB'}, async (request) => {
-  if (!request.auth) throw new HttpsError('unauthenticated', 'Entre na sua conta.');
+  if (!request.auth) throw new HttpsError('unauthenticated', 'Sessão não autenticada.');
   const authTime = request.auth.token.auth_time;
-  if (typeof authTime !== 'number' || Date.now() / 1000 - authTime > 300) {
+  const anonymous = request.auth.token.firebase?.sign_in_provider === 'anonymous';
+  // Anonymous sessions have no credential to reauthenticate with. Authorization
+  // still comes exclusively from the verified token and its own UID.
+  if (!anonymous && (typeof authTime !== 'number' || Date.now() / 1000 - authTime > 300)) {
     throw new HttpsError('failed-precondition', 'Confirme sua senha novamente.');
   }
   // UID comes exclusively from the verified Firebase token. Ignore caller data.

@@ -43,6 +43,9 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   /// Diálogo de segurança acessível para evitar exclusão acidental por idosos
   Future<void> _showDeleteConfirmation() async {
     _password.clear();
+    final requiresPassword = context
+        .read<AppStore>()
+        .passwordRequiredForDeletion;
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -70,14 +73,15 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Isso apaga os registros deste aparelho, os dados na nuvem e sua conta. A ação não pode ser desfeita. Confirme sua senha para continuar.',
+              Text(
+                'Isso apaga os registros deste aparelho, os dados na nuvem e a sessão associada. A ação não pode ser desfeita.${requiresPassword ? ' Confirme sua senha para continuar.' : ''}',
               ),
-              TextField(
-                controller: _password,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: 'Senha atual'),
-              ),
+              if (requiresPassword)
+                TextField(
+                  controller: _password,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: 'Senha atual'),
+                ),
             ],
           ),
           actionsPadding: const EdgeInsets.all(16),
@@ -175,7 +179,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                       ),
                       const SizedBox(height: 8),
                       const Text(
-                        'Mantenha seus dados seguros na nuvem para não perdê-los se trocar de aparelho.',
+                        'Mantenha uma cópia dos dados na nuvem vinculada à sessão deste aplicativo.',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 15,
@@ -206,7 +210,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                         // Botão 2: Restaurar (Download)
                         _DataActionButton(
                           title: 'Restaurar Dados',
-                          subtitle: 'Baixar dados de um aparelho antigo',
+                          subtitle: 'Recuperar dados da sessão atual',
                           icon: Icons.cloud_download_rounded,
                           color: const Color(
                             0xFF4CAF50,

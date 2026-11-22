@@ -14,11 +14,13 @@ class AppStore extends ChangeNotifier {
     required this.local,
     required this.sync,
     required this.initialProfile,
+    this.passwordRequiredForDeletion = false,
   });
   final String uid;
   final LocalRepository local;
   final SyncService sync;
   PatientProfile initialProfile;
+  final bool passwordRequiredForDeletion;
 
   void updateAuthProfile(PatientProfile value) {
     initialProfile = value;
@@ -130,17 +132,20 @@ class AppStore extends ChangeNotifier {
     await refresh();
   }
 
-  Future<void> logout() => FirebaseAuth.instance.signOut();
-
-  Future<void> deleteAccount(String password) async {
-    // Require fresh authentication before freezing and deleting the account.
+  Future<void> deleteAccount([String password = '']) async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null || user.uid != uid || user.email == null) {
-      throw StateError('Entre novamente na sua conta.');
+    if (user == null || user.uid != uid) {
+      throw StateError('Não foi possível verificar a sessão.');
     }
-    await user.reauthenticateWithCredential(
-      EmailAuthProvider.credential(email: user.email!, password: password),
-    );
+    // Anonymous sessions have no password. Preserve any existing password account.
+    if (!user.isAnonymous) {
+      if (user.email == null) {
+        throw StateError('Não foi possível confirmar a conta.');
+      }
+      await user.reauthenticateWithCredential(
+        EmailAuthProvider.credential(email: user.email!, password: password),
+      );
+    }
     await local.markDeletionPending();
     deleting = true;
     notifyListeners();

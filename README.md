@@ -2,7 +2,7 @@
 
 ## Backend e entrega da Unidade II
 
-O aplicativo existente em `glicotrack_dev/` recebeu domínio validado, Provider, SQLite/SQLCipher, autenticação Firebase, sincronização Firestore, CRUD integrado, relatórios PDF/CSV e regras de acesso. A inicialização utiliza o `firebase_options.dart` publicado pelo grupo para o projeto `glicotrack-bf802`. A habilitação de e-mail/senha, o Firestore e a implantação das regras/Cloud Function ainda precisam ser conferidos na conta do grupo.
+O aplicativo existente em `glicotrack_dev/` recebeu domínio validado, Provider, SQLite/SQLCipher, sessão anônima Firebase, sincronização Firestore, CRUD integrado, relatórios PDF/CSV e regras de acesso. A inicialização utiliza o `firebase_options.dart` publicado pelo grupo para o projeto `glicotrack-bf802`, preservando a entrada direta nas telas existentes. A habilitação de autenticação anônima, o Firestore e a implantação das regras/Cloud Function ainda precisam ser conferidos na conta do grupo. A sessão é persistida no aparelho; sem um fluxo de conta, reinstalação ou troca de aparelho não permitem recuperar automaticamente o mesmo UID.
 
 - [Configuração e comandos](docs/configuracao-firebase.md)
 - [Arquitetura, SQLite e modelagem Firestore](docs/arquitetura-unidade-ii.md)

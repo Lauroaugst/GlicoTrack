@@ -7,8 +7,8 @@ import 'package:provider/provider.dart';
 import '../services/app_bootstrap.dart';
 import '../domain/models.dart';
 import '../presentation/app_store.dart';
-import 'login_screen.dart';
 import 'main_screen.dart';
+import 'splash_screen.dart';
 
 class AuthGate extends StatefulWidget {
   const AuthGate({super.key});
@@ -23,7 +23,7 @@ class _AuthGateState extends State<AuthGate> {
     stream: _auth,
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const SplashScreen();
       }
       if (snapshot.hasError) {
         return const Scaffold(
@@ -35,9 +35,48 @@ class _AuthGateState extends State<AuthGate> {
         );
       }
       final user = snapshot.data;
-      return user == null || user.isAnonymous
-          ? const LoginScreen()
+      return user == null
+          ? const _AnonymousSession()
           : _UserSession(key: ValueKey(user.uid), user: user);
+    },
+  );
+}
+
+class _AnonymousSession extends StatefulWidget {
+  const _AnonymousSession();
+
+  @override
+  State<_AnonymousSession> createState() => _AnonymousSessionState();
+}
+
+class _AnonymousSessionState extends State<_AnonymousSession> {
+  late Future<User> _session = AppBootstrap.restoreSession();
+
+  @override
+  Widget build(BuildContext context) => FutureBuilder<User>(
+    future: _session,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'Conecte-se à internet para iniciar o aplicativo pela primeira vez.',
+                ),
+                TextButton(
+                  onPressed: () =>
+                      setState(() => _session = AppBootstrap.restoreSession()),
+                  child: const Text('Tentar novamente'),
+                ),
+              ],
+            ),
+          ),
+        );
+      }
+      // The auth stream opens the existing screens as soon as the session exists.
+      return const SplashScreen();
     },
   );
 }
@@ -63,7 +102,6 @@ class _UserSessionState extends State<_UserSession>
   @override
   void didUpdateWidget(covariant _UserSession oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Signup may finish updating displayName after auth emits its first user.
     _store?.updateAuthProfile(_authProfile(widget.user));
   }
 
@@ -81,6 +119,9 @@ class _UserSessionState extends State<_UserSession>
       uid: user.uid,
       local: services.local,
       sync: services.sync,
+      passwordRequiredForDeletion: user.providerData.any(
+        (provider) => provider.providerId == 'password',
+      ),
       initialProfile: PatientProfile(
         name: user.displayName ?? user.email?.split('@').first ?? 'Paciente',
         email: user.email ?? '',
@@ -133,17 +174,13 @@ class _UserSessionState extends State<_UserSession>
                   onPressed: () => setState(() => _loading = _open()),
                   child: const Text('Tentar novamente'),
                 ),
-                TextButton(
-                  onPressed: FirebaseAuth.instance.signOut,
-                  child: const Text('Sair'),
-                ),
               ],
             ),
           ),
         );
       }
       if (!snapshot.hasData) {
-        return const Scaffold(body: Center(child: CircularProgressIndicator()));
+        return const SplashScreen();
       }
       return ChangeNotifierProvider.value(
         value: snapshot.data!,

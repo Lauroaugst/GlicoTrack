@@ -2,6 +2,15 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [Não publicado - Conferência dos documentos da Unidade II]
+
+* Conferidos o estudo de caso, o aditivo e o enunciado da avaliação, com rastreabilidade por página/item e distinção entre implementação e aceite pendente.
+* Removidos login, cadastro, recuperação de senha e logout acrescentados na integração. Mantidas somente as telas existentes da equipe, conforme o escopo específico desta versão, com sessão automática Firebase em segundo plano.
+* Perfil sem e-mail e exclusão pela confirmação existente adaptados à sessão anônima; isolamento por UID e bloqueio contra reenvio preservados.
+* Cores da classificação aplicadas também ao cabeçalho e ao painel do formulário para cumprir a mudança de cor da tela exigida no aditivo, mantendo os campos e a navegação.
+* Complementado `docs/uso-de-ia.md` com solicitações utilizadas, erros/correções e justificativas das bibliotecas exigidas no item b.vi.
+* Registradas as pendências de aceite nativo/produção e a ausência de definição para o cálculo de insulina mencionado no objetivo do estudo de caso.
+
 ## [Unidade II - Integração do backend às telas] - 2026-11-21
 
 ### Adicionado

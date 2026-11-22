@@ -47,6 +47,17 @@ test('profile email must match authenticated account', async () => {
   await assertSucceeds(setDoc(profileRef, profile));
   await assertFails(setDoc(profileRef,{...profile,payload:{...profile.payload,email:'bob@example.com'}}));
 });
+
+test('anonymous session can save its profile without email and cannot access another UID', async () => {
+  const anonymous = env.authenticatedContext('guest', {firebase:{sign_in_provider:'anonymous'}}).firestore();
+  const profileRef = doc(anonymous,'users/guest/documents/profile');
+  const profile = {...data(),uid:'guest',id:'profile',kind:'profile',payload:{name:'Paciente',email:'',createdAt:100,age:35,weight:70,photo:null}};
+  await assertSucceeds(setDoc(profileRef,profile));
+  await assertSucceeds(getDoc(profileRef));
+  await assertFails(setDoc(profileRef,{...profile,payload:{...profile.payload,email:'alice@example.com'}}));
+  await assertFails(getDoc(ref(anonymous)));
+  await assertFails(setDoc(ref(anonymous),data()));
+});
 test('deletion lock blocks stale offline uploads and reads', async () => {
   await assertSucceeds(setDoc(ref(db()),data()));
   await env.withSecurityRulesDisabled(async context => { await setDoc(doc(context.firestore(),'deletionRequests/alice'),{state:'deleting'}); });

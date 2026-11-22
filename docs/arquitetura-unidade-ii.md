@@ -4,7 +4,9 @@
 
 Implementação no projeto `glicotrack_dev`, sem recriação do frontend. Fontes: texto de implementação fornecido pelo solicitante, `GlicoTrack.pdf` (inclusive aditivo da Unidade II), enunciado da avaliação e documentos da Unidade I neste repositório. As determinações acadêmicas nos PDFs são requisitos do produto/entrega; não autorizam publicação no Teams, commits em nome da equipe ou implantação em uma conta Firebase.
 
-A numeração oficial para rastreabilidade é a de `requisitos.md`, RF01-RF17 e RNF01-RNF21. As apresentações contêm numerações resumidas diferentes. Prevalece a lista completa. O trecho antigo de `estudo-de-caso.md` que sugere ausência de som em ambientes públicos diverge do PDF e de RF06; o alerta sonoro é restrito à hipoglicemia. Não foi implementada calculadora de doses: faltam fórmula validada e parâmetros individuais prescritos.
+Esta versão integra o backend somente às telas já desenvolvidas pela equipe. Por definição explícita do escopo do GlicoTrack, não há tela de login, cadastro, recuperação de senha ou logout. O item genérico de login do enunciado não foi adotado nesta versão. A autenticação Firebase permanece automática em segundo plano, reutilizando a sessão persistida ou criando uma sessão anônima na primeira abertura, como a main anterior da equipe. As quatro abas e as telas secundárias existentes são preservadas.
+
+A numeração oficial para rastreabilidade é a de `requisitos.md`, RF01-RF17 e RNF01-RNF21. As apresentações contêm numerações resumidas diferentes. Prevalece a lista completa. O trecho antigo de `estudo-de-caso.md` que sugere ausência de som em ambientes públicos diverge do PDF e de RF06; o alerta sonoro é restrito à hipoglicemia. O cálculo de insulina mencionado no objetivo do estudo de caso não está implementado: faltam fórmula definida e parâmetros individuais, e essa definição precisa ser esclarecida com a disciplina.
 
 ## Camadas
 
@@ -15,7 +17,7 @@ A numeração oficial para rastreabilidade é a de `requisitos.md`, RF01-RF17 e 
 | Data | `lib/data/local_database.dart` | SQLite/SQLCipher, transações, fila, conflitos, exclusão e isolamento por UID |
 | Data | `firebase_repository.dart`, `sync_service.dart` | Transações Firestore, paginação, sincronização, retentativa e importação |
 | Presentation | `lib/presentation/app_store.dart` | Estado Provider, operações usadas pelas telas e atualização após persistência |
-| Presentation | `lib/screens/` | Telas originais integradas e login mínimo; quatro abas principais preservadas |
+| Presentation | `lib/screens/` | Somente telas originais integradas; quatro abas principais preservadas |
 | Serviços | `lib/services/` | PDF existente ampliado, CSV e ponte para alerta sonoro nativo |
 | Servidor | `functions/` e `firestore.rules` | Exclusão autenticada, trava permanente contra reenvio e validação independente do cliente |
 
@@ -45,6 +47,8 @@ classDiagram
     +double? insulin
     +double? carbs
     +String notes
+    +validate()
+    +toJson()
     +DateTime createdAt
     +validate()
     +toJson()
@@ -52,6 +56,9 @@ classDiagram
   class GlucoseSettings {
     +int lower
     +int upper
+    +validate()
+    +classify(value)
+    +toJson()
     +classify(value) GlucoseStatus
     +validate()
   }
@@ -154,9 +161,9 @@ Backup manual usa a mesma fila; restauração incorpora dados e metas remotos pr
 
 ## Segurança e exclusão
 
-Login/cadastro/recuperação exigem internet; uma sessão Firebase já persistida continua permitindo acesso local offline. Cada sessão autenticada tem seu próprio Provider e Navigator. Logout remove a pilha protegida, inclusive telas secundárias; o banco conserva os dados criptografados por UID para o próximo login da mesma conta.
+A primeira criação da sessão anônima exige internet; a sessão persistida é reutilizada para acesso local offline sem mudar o UID. Cada sessão tem seu próprio Provider e Navigator, sem formulário de autenticação ou ação de logout. O banco conserva os dados criptografados por UID. Backup e restauração consultam a sessão atual; reinstalação, limpeza dos dados do app ou troca de aparelho não recuperam automaticamente o UID anterior sem vínculo de conta.
 
-Exclusão exige senha recente, marca persistente local e interrupção da sincronização. A callable `deleteMyAccount` exige autenticação recente (5 minutos), cria uma trava antes de excluir recursivamente `/users/{uid}`, remove a conta Auth e finaliza a trava. A trava técnica conserva somente UID/estado, sem registros médicos, para impedir que outro aparelho offline recrie dados. Ela não é acessível pelo cliente. Falha intermediária conserva o bloqueio e permite retentativa. Não há credenciais administrativas no Flutter. A publicação em produção e a definição de política de retenção das travas são externas.
+Exclusão exige a confirmação existente, token Firebase do próprio UID, marca persistente local e interrupção da sincronização. Uma sessão anônima não tem senha; a callable reconhece esse provedor pelo token verificado. Contas não anônimas já persistidas conservam a exigência de autenticação recente (5 minutos). A callable `deleteMyAccount` cria uma trava antes de excluir recursivamente `/users/{uid}`, remove a conta Auth e finaliza a trava. A trava técnica conserva somente UID/estado, sem registros médicos, para impedir reenvio do UID antigo. Ela não é acessível pelo cliente. Falha intermediária conserva o bloqueio e permite retentativa. Não há credenciais administrativas no Flutter. A publicação em produção e a definição de política de retenção das travas são externas.
 
 Exportações contêm dados sensíveis por escolha do usuário. CSV neutraliza fórmulas e escapa separadores/aspas. Os PDFs incluem paciente, período, registros, doses aplicadas, carboidratos, categorias, observações, gráfico e estatísticas; fontes Noto são empacotadas para não depender da internet. Nenhuma análise sugere tratamento ou dose.
 
@@ -172,5 +179,7 @@ Exportações contêm dados sensíveis por escolha do usuário. CSV neutraliza f
 A biblioteca Material foi separada do Flutter no SDK utilizado. Os imports foram migrados para `material_ui`, sem redesenhar as telas. A tipografia do app continua nativa; Noto é usada somente no PDF.
 
 ## Integração com a main em 21/11/2026
+
+Registro histórico: o fluxo de login descrito neste parágrafo foi posteriormente removido para atender ao escopo desta versão, definido acima.
 
 Foram incorporados os 24 commits posteriores a `61f3be0`, até `00086b0`. O arquivo `firebase_options.dart` foi preservado; `initializeFirebase` utiliza essas opções por padrão. A fábrica `AppBootstrap.initialize` foi reaproveitada pela AuthGate. O AppStore concentra consultas, assinaturas e estado das telas; a fábrica recebe `startSync: false` nesse fluxo para haver uma única inicialização da sincronização. A criação automática de outra conta anônima foi removida do arranque. Sessões anônimas já existentes podem ser vinculadas a e-mail/senha conservando o UID. A refeição e os detalhes adicionados à linha do tempo foram mantidos, juntamente com posição temporal e filtros do gráfico. Os seis conflitos de arquivos foram conciliados sem reescrever os commits da equipe.

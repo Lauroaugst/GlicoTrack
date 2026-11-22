@@ -18,6 +18,16 @@ class AppBootstrap {
   final FirebaseRepository remote;
   final SyncService sync;
 
+  static Future<User> restoreSession({FirebaseAuth? auth}) async {
+    final client = auth ?? FirebaseAuth.instance;
+    final existing = client.currentUser;
+    if (existing != null) return existing;
+    final credential = await client.signInAnonymously();
+    final user = credential.user;
+    if (user == null) throw StateError('Não foi possível iniciar a sessão.');
+    return user;
+  }
+
   static Future<AppBootstrap> initialize({bool startSync = true}) async {
     // Recupera o usuário autenticado.
     final user = FirebaseAuth.instance.currentUser;
