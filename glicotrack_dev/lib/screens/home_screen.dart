@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+import '../domain/models.dart';
+import '../presentation/app_store.dart';
 
 // ============================================================================
 // DATA MODELS & MOCKS
@@ -32,7 +36,7 @@ class ActionMenuModel {
   });
 }
 
-abstract class HomeMockData {
+abstract class HomeLabels {
   static const List<MealSummaryModel> todaySummary = [
     MealSummaryModel(
       id: 'breakfast',
@@ -75,6 +79,34 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
+    final store = context.watch<AppStore>();
+    final now = DateTime.now();
+    final today = store.select(
+      start: DateTime(now.year, now.month, now.day),
+      end: DateTime(now.year, now.month, now.day + 1),
+    );
+    final summary = HomeLabels.todaySummary.map((label) {
+      final readings = today.where((r) => r.meal == label.id);
+      final latest = readings.isEmpty ? null : readings.first;
+      return MealSummaryModel(
+        id: label.id,
+        mealName: label.mealName,
+        icon: label.icon,
+        value: latest == null ? null : '${latest.glucose}',
+        status: latest == null
+            ? 'Pendente'
+            : store.settings.classify(latest.glucose).label,
+      );
+    }).toList();
+    final week = store.select(
+      start: DateTime(now.year, now.month, now.day - 6),
+      end: DateTime(now.year, now.month, now.day + 1),
+    );
+    final month = store.select(
+      start: DateTime(now.year, now.month, 1),
+      end: DateTime(now.year, now.month, now.day + 1),
+    );
+    final stats = RecordStatistics(week, store.settings, days: 7);
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
 
@@ -116,12 +148,35 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Column(
-                    children: _buildSummaryList(HomeMockData.todaySummary),
-                  ),
+                  child: Column(children: _buildSummaryList(summary)),
                 ),
               ),
 
+              const SizedBox(height: 24),
+              Text(
+                '${today.length} medições hoje • ${stats.count} nos últimos 7 dias • ${month.length} neste mês',
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                'Média diária: ${stats.frequency.toStringAsFixed(1)} • Na faixa: ${stats.inRangePercent.toStringAsFixed(0)}%',
+                textAlign: TextAlign.center,
+              ),
+              Text(
+                TrendIndicator.analyze(week, store.settings).message,
+                textAlign: TextAlign.center,
+              ),
+              if (store.loadError != null)
+                Text(
+                  store.loadError!,
+                  style: const TextStyle(color: Colors.red),
+                ),
+              Text(
+                store.sync.error ??
+                    (store.sync.syncing
+                        ? 'Sincronizando…'
+                        : '${store.pending} alterações aguardando sincronização'),
+                textAlign: TextAlign.center,
+              ),
               const SizedBox(height: 24),
 
               // Seção 2: Controle Diário (Ações)

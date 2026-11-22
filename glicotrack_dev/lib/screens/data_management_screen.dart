@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+import '../presentation/app_store.dart';
+import '../presentation/glucose_style.dart';
 
 class DataManagementScreen extends StatefulWidget {
   const DataManagementScreen({super.key});
@@ -10,29 +14,35 @@ class DataManagementScreen extends StatefulWidget {
 class _DataManagementScreenState extends State<DataManagementScreen> {
   bool _isLoading = false;
 
-  /// Simula uma ação assíncrona (como Backup no Firebase ou Download)
-  Future<void> _performAction(String successMessage) async {
+  final _password = TextEditingController();
+  @override
+  void dispose() {
+    _password.dispose();
+    super.dispose();
+  }
+
+  Future<void> _performAction(
+    Future<void> Function() action,
+    String successMessage,
+  ) async {
+    if (_isLoading) return;
     setState(() => _isLoading = true);
-
-    // Simula o tempo de rede
-    await Future.delayed(const Duration(seconds: 2));
-
-    if (mounted) {
-      setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            successMessage,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
-          backgroundColor: const Color(0xFF0060C0),
-        ),
-      );
+    try {
+      await action();
+      if (mounted) {
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(successMessage)));
+      }
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   /// Diálogo de segurança acessível para evitar exclusão acidental por idosos
   Future<void> _showDeleteConfirmation() async {
+    _password.clear();
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -57,9 +67,18 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               ),
             ],
           ),
-          content: const Text(
-            'Você está prestes a excluir todos os seus registros médicos e sua conta. Esta ação apagará os dados do seu celular e do nosso sistema (Nuvem).\n\nEssa ação NÃO pode ser desfeita.',
-            style: TextStyle(fontSize: 16, color: Colors.black87, height: 1.3),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Isso apaga os registros deste aparelho, os dados na nuvem e sua conta. A ação não pode ser desfeita. Confirme sua senha para continuar.',
+              ),
+              TextField(
+                controller: _password,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Senha atual'),
+              ),
+            ],
           ),
           actionsPadding: const EdgeInsets.all(16),
           actions: [
@@ -72,16 +91,11 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             ),
             ElevatedButton(
               onPressed: () {
+                final password = _password.text;
                 Navigator.of(dialogContext).pop();
-                // Aqui entraria a lógica real de limpar SQLite e auth.signOut()
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Dados excluídos permanentemente.',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                    backgroundColor: Color(0xFFD32F2F),
-                  ),
+                _performAction(
+                  () => context.read<AppStore>().deleteAccount(password),
+                  'Exclusão concluída.',
                 );
               },
               style: ElevatedButton.styleFrom(
@@ -105,6 +119,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final store = context.watch<AppStore>();
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
       appBar: AppBar(
@@ -170,29 +185,38 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                       ),
                       const SizedBox(height: 32),
 
-                      // Botão 1: Backup (Upload)
-                      _DataActionButton(
-                        title: 'Fazer Backup Agora',
-                        subtitle: 'Salvar dados atuais na nuvem',
-                        icon: Icons.cloud_upload_rounded,
-                        color: const Color(0xFF0060C0),
-                        onTap: () =>
-                            _performAction('Backup concluído com sucesso!'),
-                      ),
-                      const SizedBox(height: 16),
+                      if (store.deleting)
+                        const Text(
+                          'Exclusão pendente. Os registros estão bloqueados para impedir novos envios. Conecte-se à internet e tente excluir novamente.',
+                        ),
+                      if (!store.deleting) ...[
+                        // Botão 1: Backup (Upload)
+                        _DataActionButton(
+                          title: 'Fazer Backup Agora',
+                          subtitle: 'Salvar dados atuais na nuvem',
+                          icon: Icons.cloud_upload_rounded,
+                          color: const Color(0xFF0060C0),
+                          onTap: () => _performAction(
+                            () => store.sync.syncNow(),
+                            'Sincronização com a nuvem concluída.',
+                          ),
+                        ),
+                        const SizedBox(height: 16),
 
-                      // Botão 2: Restaurar (Download)
-                      _DataActionButton(
-                        title: 'Restaurar Dados',
-                        subtitle: 'Baixar dados de um aparelho antigo',
-                        icon: Icons.cloud_download_rounded,
-                        color: const Color(
-                          0xFF4CAF50,
-                        ), // Verde para indicar recuperação segura
-                        onTap: () =>
-                            _performAction('Dados restaurados com sucesso!'),
-                      ),
-
+                        // Botão 2: Restaurar (Download)
+                        _DataActionButton(
+                          title: 'Restaurar Dados',
+                          subtitle: 'Baixar dados de um aparelho antigo',
+                          icon: Icons.cloud_download_rounded,
+                          color: const Color(
+                            0xFF4CAF50,
+                          ), // Verde para indicar recuperação segura
+                          onTap: () => _performAction(
+                            () => store.sync.syncNow(restore: true),
+                            'Dados remotos incorporados ao histórico local.',
+                          ),
+                        ),
+                      ],
                       const Padding(
                         padding: EdgeInsets.symmetric(vertical: 24.0),
                         child: Divider(color: Colors.black12, thickness: 1.5),

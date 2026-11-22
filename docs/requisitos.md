@@ -1,5 +1,7 @@
 # Atividade 03 - Funcionalidades e Requisitos
 
+> Unidade II: o detalhamento original e seus identificadores foram preservados. Implementações, testes e pendências estão em [matriz-rastreabilidade.md](matriz-rastreabilidade.md). O aditivo também contempla autenticação Firebase, categorias jejum/pré-refeição/pós-refeição/antes de dormir, estatísticas mensais, metas, CSV, sincronização bidirecional, conflitos, criptografia e tendências apenas informativas. Valores entre 70 e a meta inferior personalizada são “abaixo da meta”, sem classificação de hipoglicemia. O cálculo de doses permanece fora da implementação por falta de fórmula validada e parâmetros prescritos.
+
 ## 2.1 Funcionalidades
 
 | Funcionalidade                      | Necessidade do usuário                                                                                                                        | Descrição                                                                      | Justificativa                                                                                                            |

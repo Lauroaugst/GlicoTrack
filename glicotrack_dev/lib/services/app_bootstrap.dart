@@ -18,7 +18,7 @@ class AppBootstrap {
   final FirebaseRepository remote;
   final SyncService sync;
 
-  static Future<AppBootstrap> initialize() async {
+  static Future<AppBootstrap> initialize({bool startSync = true}) async {
     // Recupera o usuário autenticado.
     final user = FirebaseAuth.instance.currentUser;
 
@@ -32,14 +32,23 @@ class AppBootstrap {
     // Inicializa o banco SQLite criptografado.
     final local = await LocalDatabase.open(uid);
 
-    // Inicializa o repositório remoto do Firestore.
-    final remote = FirebaseRepository(FirebaseFirestore.instance, uid);
-
-    // Cria e inicia o serviço de sincronização.
-    final sync = SyncService(local, remote);
-    sync.start();
-
-    return AppBootstrap._(uid: uid, local: local, remote: remote, sync: sync);
+    SyncService? sync;
+    try {
+      if (FirebaseAuth.instance.currentUser?.uid != uid) {
+        throw StateError('Sessão encerrada durante a inicialização.');
+      }
+      final remote = FirebaseRepository(FirebaseFirestore.instance, uid);
+      sync = SyncService(local, remote);
+      // AppStore controls startup when Provider owns the session. Other callers
+      // retain the existing factory behavior, respecting a pending deletion.
+      if (startSync && !await local.deletionPending()) sync.start();
+      return AppBootstrap._(uid: uid, local: local, remote: remote, sync: sync);
+    } catch (_) {
+      await sync?.stop();
+      sync?.dispose();
+      await local.close();
+      rethrow;
+    }
   }
 
   Future<void> dispose() async {

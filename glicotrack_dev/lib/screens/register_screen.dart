@@ -1,8 +1,14 @@
-import 'package:glicotrack_dev/data/local_database.dart';
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:uuid/uuid.dart';
+
+import 'dart:async';
+
+import 'package:provider/provider.dart';
+
+import '../domain/models.dart';
+import '../presentation/app_store.dart';
+import '../presentation/glucose_style.dart';
+import '../services/hypo_alert.dart';
 
 class MealTimeOption {
   final String id;
@@ -11,12 +17,12 @@ class MealTimeOption {
 
   const MealTimeOption({
     required this.id,
-    required this.label, 
+    required this.label,
     required this.icon,
   });
 }
 
-abstract class GlucoseMockData {
+abstract class MealOptions {
   static const List<MealTimeOption> mealTimes = [
     MealTimeOption(
       id: 'breakfast',
@@ -33,13 +39,9 @@ abstract class GlucoseMockData {
 }
 
 class RegisterScreen extends StatefulWidget {
-  
-  final LocalDatabase localDatabase;
-
-  const RegisterScreen({
-    super.key,
-    required this.localDatabase,
-  });
+  const RegisterScreen({super.key, this.record, this.active = true});
+  final HealthRecord? record;
+  final bool active;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -47,7 +49,67 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   DateTime _selectedDate = DateTime.now();
-  String _selectedMealTimeId = GlucoseMockData.mealTimes.first.id;
+  String _selectedMealTimeId = MealOptions.mealTimes.first.id;
+  MeasurementCategory _category = MeasurementCategory.fasting;
+  final _notesController = TextEditingController();
+  final _glucoseFocus = FocusNode();
+  bool _saving = false;
+  bool _hypoAlerted = false;
+  bool _timeChosen = false;
+  Timer? _alertTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    final record = widget.record;
+    if (record != null) {
+      _selectedDate = record.measuredAt;
+      _selectedMealTimeId = record.meal;
+      _category = record.category;
+      _glucoseController.text = record.glucose.toString();
+      _insulinController.text = record.insulin?.toString() ?? '';
+      _carbsController.text = record.carbs?.toString() ?? '';
+      _notesController.text = record.notes;
+    }
+    _glucoseController.addListener(_onGlucoseChanged);
+    _focusWhenActive();
+  }
+
+  void _focusWhenActive() {
+    if (widget.active) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && widget.active) _glucoseFocus.requestFocus();
+      });
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant RegisterScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.active && !oldWidget.active) _focusWhenActive();
+    if (!widget.active) {
+      _glucoseFocus.unfocus();
+      _alertTimer?.cancel();
+    }
+  }
+
+  void _onGlucoseChanged() {
+    final value = int.tryParse(_glucoseController.text);
+    _alertTimer?.cancel();
+    if (value == null || value >= 70) _hypoAlerted = false;
+    if (widget.active &&
+        value != null &&
+        value > 0 &&
+        value < 70 &&
+        !_hypoAlerted) {
+      _alertTimer = Timer(const Duration(milliseconds: 450), () {
+        if (!mounted || !widget.active) return;
+        _hypoAlerted = true;
+        unawaited(HypoAlert.play());
+      });
+    }
+    if (mounted) setState(() {});
+  }
 
   final TextEditingController _glucoseController = TextEditingController();
   final TextEditingController _insulinController = TextEditingController();
@@ -55,6 +117,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   @override
   void dispose() {
+    _alertTimer?.cancel();
+    _glucoseController.removeListener(_onGlucoseChanged);
+    _notesController.dispose();
+    _glucoseFocus.dispose();
     _glucoseController.dispose();
     _insulinController.dispose();
     _carbsController.dispose();
@@ -81,135 +147,138 @@ class _RegisterScreenState extends State<RegisterScreen> {
       },
     );
     if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+      if (!mounted) return;
+      setState(
+        () => _selectedDate = DateTime(
+          picked.year,
+          picked.month,
+          picked.day,
+          _selectedDate.hour,
+          _selectedDate.minute,
+        ),
+      );
     }
+  }
+
+  double? _optionalNumber(String text) {
+    if (text.trim().isEmpty) return null;
+    final value = double.tryParse(text.replaceAll(',', '.'));
+    if (value == null) {
+      throw const FormatException('Informe uma quantidade numérica válida.');
+    }
+    return value;
   }
 
   Future<void> _saveRecord() async {
-  // 1. Obtém e valida o valor da glicemia.
-  final glucose = int.tryParse(_glucoseController.text.trim());
-
-  if (glucose == null || glucose < 1 || glucose > 1000) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Informe uma glicemia válida entre 1 e 1000 mg/dL.'),
-        backgroundColor: Color(0xFFB00020),
-      ),
-    );
-    return;
-  }
-
-  // 2. Converte os campos opcionais para números.
-  final insulinText = _insulinController.text.trim();
-  final carbsText = _carbsController.text.trim();
-
-  final insulin = insulinText.isEmpty
-      ? null
-      : double.tryParse(insulinText.replaceAll(',', '.'));
-
-  final carbs = carbsText.isEmpty
-      ? null
-      : double.tryParse(carbsText.replaceAll(',', '.'));
-
-  // Verifica se os campos opcionais foram preenchidos corretamente.
-  if ((insulinText.isNotEmpty && insulin == null) ||
-      (carbsText.isNotEmpty && carbs == null)) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Confira os valores de insulina e carboidratos.'),
-        backgroundColor: Color(0xFFB00020),
-      ),
-    );
-    return;
-  }
-
-  try {
-    // 3. Recupera o usuário autenticado no Firebase.
-    final user = FirebaseAuth.instance.currentUser;
-
-    if (user == null) {
-      throw StateError('Usuário não autenticado.');
-    }
-
-    // 4. Cria um identificador único para o registro.
-    final id = const Uuid().v4();
-
-    // 5. Combina a data selecionada com o horário atual.
-    final now = DateTime.now();
-
-    final measuredAt = DateTime(
-      _selectedDate.year,
-      _selectedDate.month,
-      _selectedDate.day,
-      now.hour,
-      now.minute,
-      now.second,
-    );
-
-    // 6. Cria o objeto com os dados informados pelo usuário.
-    final record = HealthRecord(
-      id: id,
-      uid: user.uid,
-      glucose: glucose,
-      measuredAt: measuredAt,
-      category: _selectedCategory,
-      meal: _selectedMealTimeId,
-      createdAt: now,
-      insulin: insulin,
-      carbs: carbs,
-    );
-
-    // 7. Valida os dados conforme as regras do modelo.
-    record.validate();
-
-    // 8. Salva o registro no SQLite criptografado.
-    await widget.localDatabase.save(
-      record.id,
-      'record',
-      record.toJson(),
-    );
-    final savedDocuments = await widget.localDatabase.all(pendingOnly: false);
-
-      debugPrint(
-        'GlicoTrack: ${savedDocuments.length} documento(s) '
-        'encontrado(s) imediatamente após salvar.',
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final store = context.read<AppStore>();
+      final now = DateTime.now();
+      final glucose = int.tryParse(_glucoseController.text.trim());
+      if (glucose == null) {
+        throw const FormatException(
+          'Informe o valor da glicemia em números inteiros.',
+        );
+      }
+      final record = HealthRecord(
+        id: widget.record?.id ?? store.newId(),
+        uid: store.uid,
+        glucose: glucose,
+        measuredAt: widget.record != null || _timeChosen
+            ? _selectedDate
+            : DateTime(
+                _selectedDate.year,
+                _selectedDate.month,
+                _selectedDate.day,
+                now.hour,
+                now.minute,
+                now.second,
+              ),
+        category: _category,
+        meal: _selectedMealTimeId,
+        createdAt: widget.record?.createdAt ?? now,
+        insulin: _optionalNumber(_insulinController.text),
+        carbs: _optionalNumber(_carbsController.text),
+        notes: _notesController.text.trim(),
       );
-    if (!mounted) return;
-
-    // 9. Exibe sucesso somente após salvar no SQLite.
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Registro salvo com sucesso!',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+      await store.saveRecord(record);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Registro salvo neste aparelho.'),
+          backgroundColor: Color(0xFF0060C0),
         ),
-        backgroundColor: Color(0xFF0060C0),
-      ),
-    );
-
-    // 10. Limpa os campos para permitir um novo registro.
-    _glucoseController.clear();
-    _insulinController.clear();
-    _carbsController.clear();
-  } catch (error) {
-    if (!mounted) return;
-
-    // Exibe uma mensagem caso ocorra erro na validação ou no banco.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Não foi possível salvar o registro: $error'),
-        backgroundColor: const Color(0xFFB00020),
-      ),
-    );
+      );
+      if (widget.record != null) {
+        Navigator.of(context).pop();
+        return;
+      }
+      _glucoseController.clear();
+      _insulinController.clear();
+      _carbsController.clear();
+      _notesController.clear();
+      _selectedDate = DateTime.now();
+      _timeChosen = false;
+      _focusWhenActive();
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
-}
+
+  Widget _saveButton(AppStore store) => Semantics(
+    label: 'Salvar registro de glicemia',
+    button: true,
+    child: Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 64),
+      child: ElevatedButton(
+        onPressed: _saving || store.deleting ? null : _saveRecord,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF4889DC),
+          foregroundColor: Colors.white,
+          elevation: 2,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Text(
+          'Guardar Registro',
+          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
+    final store = context.watch<AppStore>();
+    final keyboardVisible = MediaQuery.viewInsetsOf(context).bottom > 0;
+    final value = int.tryParse(_glucoseController.text);
+    final status = value != null && value > 0
+        ? store.settings.classify(value)
+        : null;
     return Scaffold(
+      bottomNavigationBar: keyboardVisible
+          ? SafeArea(
+              top: false,
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(
+                  12,
+                  12,
+                  12,
+                  12 + MediaQuery.viewInsetsOf(context).bottom,
+                ),
+                child: _saveButton(store),
+              ),
+            )
+          : null,
       // Fundo azul claro padrão do app
-      backgroundColor: const Color(0xFFE3F1FD),
+      backgroundColor: status == null
+          ? const Color(0xFFE3F1FD)
+          : glucoseColor(status),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0060C0),
         elevation: 3,
@@ -260,6 +329,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   selectedDate: _selectedDate,
                   onTap: _pickDate,
                 ),
+                TextButton.icon(
+                  onPressed: () async {
+                    final picked = await showTimePicker(
+                      context: context,
+                      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+                    );
+                    if (picked != null && mounted) {
+                      _timeChosen = true;
+                      setState(
+                        () => _selectedDate = DateTime(
+                          _selectedDate.year,
+                          _selectedDate.month,
+                          _selectedDate.day,
+                          picked.hour,
+                          picked.minute,
+                        ),
+                      );
+                    }
+                  },
+                  icon: const Icon(Icons.access_time),
+                  label: Text('Horário: ${timeLabel(_selectedDate)}'),
+                ),
                 const SizedBox(height: 20),
 
                 // Seletor de Momento do Dia
@@ -273,7 +364,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 const SizedBox(height: 8),
                 _MealTimeSelector(
-                  options: GlucoseMockData.mealTimes,
+                  options: MealOptions.mealTimes,
                   selectedId: _selectedMealTimeId,
                   onSelected: (id) {
                     setState(() {
@@ -282,56 +373,47 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   },
                 ),
                 const SizedBox(height: 24),
-                // Seleção da categoria da medição.
-                const Text(
-                  'Momento da medição',
-                    style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                          ),
-                     ),
-                const SizedBox(height: 8),
 
-                    DropdownButtonFormField<MeasurementCategory>(
-                      initialValue: _selectedCategory,
-                        decoration: const InputDecoration(
-                        border: OutlineInputBorder(),
-                      ),
-                         items: const [
-                    DropdownMenuItem(
-                        value: MeasurementCategory.beforeMeal,
-                        child: Text('Antes da refeição'),
-                      ),
-                    DropdownMenuItem(
-                         value: MeasurementCategory.afterMeal,
-                          child: Text('Depois da refeição'),
-                      ),
-                     DropdownMenuItem(
-                           value: MeasurementCategory.fasting,
-                           child: Text('Em jejum'),
-                      ),
-                      DropdownMenuItem(
-                          value: MeasurementCategory.bedtime,
-                          child: Text('Antes de dormir'),
-                      ),
-                        ],
-                          onChanged: (value) {
-                              if (value != null) {
-                                  setState(() {
-                                     _selectedCategory = value;
-                                  });
-                                }
-                            },
-                        ),
+                DropdownButtonFormField<MeasurementCategory>(
+                  initialValue: _category,
+                  decoration: const InputDecoration(
+                    labelText: 'Categoria da medição',
+                  ),
+                  items: MeasurementCategory.values
+                      .map(
+                        (c) => DropdownMenuItem(value: c, child: Text(c.label)),
+                      )
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) setState(() => _category = value);
+                  },
+                ),
+                const SizedBox(height: 20),
 
-                        const SizedBox(height: 24),
                 // Inputs Numéricos (Retrocedidos para digitação direta, sem steppers)
                 _SimpleTextField(
                   label: 'Glicemia (mg/dL)',
                   controller: _glucoseController,
                   isDecimal: false,
+                  focusNode: _glucoseFocus,
+                  onSubmitted: (_) => _saveRecord(),
+                  large: true,
                 ),
+                if (status != null)
+                  Semantics(
+                    liveRegion: true,
+                    child: Padding(
+                      padding: const EdgeInsets.only(top: 12),
+                      child: Text(
+                        status.label,
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: glucoseColor(status),
+                        ),
+                      ),
+                    ),
+                  ),
                 const SizedBox(height: 20),
 
                 _SimpleTextField(
@@ -346,35 +428,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   controller: _carbsController,
                   isDecimal: true,
                 ),
-                const SizedBox(height: 32),
-
-                // Botão Salvar
-                Semantics(
-                  label: 'Salvar registro de glicemia',
-                  button: true,
-                  child: Container(
-                    width: double.infinity,
-                    constraints: const BoxConstraints(minHeight: 64),
-                    child: ElevatedButton(
-                      onPressed: _saveRecord,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF4889DC),
-                        foregroundColor: Colors.white,
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: const Text(
-                        'Guardar Registro',
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+                const SizedBox(height: 20),
+                TextField(
+                  controller: _notesController,
+                  maxLength: 2000,
+                  maxLines: 2,
+                  decoration: const InputDecoration(
+                    labelText: 'Observações (opcional)',
                   ),
                 ),
+                const SizedBox(height: 32),
+
+                if (!keyboardVisible) _saveButton(store),
               ],
             ),
           ),
@@ -546,11 +611,17 @@ class _SimpleTextField extends StatelessWidget {
   final String label;
   final TextEditingController controller;
   final bool isDecimal;
+  final FocusNode? focusNode;
+  final ValueChanged<String>? onSubmitted;
+  final bool large;
 
   const _SimpleTextField({
     required this.label,
     required this.controller,
     this.isDecimal = false,
+    this.focusNode,
+    this.onSubmitted,
+    this.large = false,
   });
 
   @override
@@ -570,11 +641,22 @@ class _SimpleTextField extends StatelessWidget {
         ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 56),
           child: TextField(
+            focusNode: focusNode,
+            onSubmitted: onSubmitted,
+            textInputAction: onSubmitted == null
+                ? TextInputAction.next
+                : TextInputAction.done,
             controller: controller,
             keyboardType: TextInputType.numberWithOptions(decimal: isDecimal),
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+            style: TextStyle(
+              fontSize: large ? 36 : 18,
+              fontWeight: FontWeight.w500,
+            ),
             inputFormatters: [
-              FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
+              if (isDecimal)
+                FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))
+              else
+                FilteringTextInputFormatter.digitsOnly,
             ],
             decoration: InputDecoration(
               filled: true,

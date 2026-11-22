@@ -1,12 +1,16 @@
-import 'package:flutter/material.dart';
-import 'package:glicotrack_dev/data/local_database.dart';
-import 'package:glicotrack_dev/domain/models.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+import '../domain/models.dart';
+import '../presentation/app_store.dart';
+import '../presentation/glucose_style.dart';
+import 'register_screen.dart';
 
 // ============================================================================
 // DATA MODELS
 // ============================================================================
 
-enum GlucoseLevelStatus { low, normal, high }
+enum GlucoseLevelStatus { low, belowTarget, normal, high }
 
 class MeasurementModel {
   final String id;
@@ -15,10 +19,6 @@ class MeasurementModel {
   final int glucoseValue;
   final String contextTag; // Ex: 'Pós-Refeição'
   final GlucoseLevelStatus status;
-  final double? insulin;
-  final double? carbs;
-  final String notes;
-  final String meal;
 
   const MeasurementModel({
     required this.id,
@@ -27,16 +27,14 @@ class MeasurementModel {
     required this.glucoseValue,
     required this.contextTag,
     required this.status,
-    this.insulin,
-    this.carbs,
-    this.notes = '',
-    this.meal = '',
   });
 
   Color get statusColor {
     switch (status) {
       case GlucoseLevelStatus.low:
         return const Color(0xFFF44336); // Vermelho (Hipoglicemia)
+      case GlucoseLevelStatus.belowTarget:
+        return const Color(0xFF8D6E00);
       case GlucoseLevelStatus.normal:
         return const Color(0xFF4CAF50); // Verde (Normal)
       case GlucoseLevelStatus.high:
@@ -50,94 +48,171 @@ class MeasurementModel {
 // ============================================================================
 
 class TimelineScreen extends StatefulWidget {
-  final LocalDatabase localDatabase;
-
-  const TimelineScreen({super.key, required this.localDatabase});
+  const TimelineScreen({super.key, this.start, this.end});
+  final DateTime? start;
+  final DateTime? end;
 
   @override
   State<TimelineScreen> createState() => _TimelineScreenState();
 }
 
 class _TimelineScreenState extends State<TimelineScreen> {
-  // Inicialização com os dados de exemplo, gerenciados em estado local
-  // para simular a reatividade da remoção dos dados.
-  List<MeasurementModel> _measurements = [];
-
-  bool _isLoading = true;
-  String? _loadError;
+  DateTime? _start;
+  DateTime? _end;
+  MeasurementCategory? _category;
   @override
   void initState() {
     super.initState();
-    _loadRecords();
+    _start = widget.start;
+    _end = widget.end;
   }
 
-  Future<void> _loadRecords() async {
-    setState(() {
-      _isLoading = true;
-      _loadError = null;
-    });
-
+  Future<void> _clearAllData() async {
     try {
-      final documents = await widget.localDatabase.all(kind: 'record');
-
-      final records = documents
-          .where((doc) => !doc.deleted)
-          .map((doc) => HealthRecord.fromJson(doc.id, doc.uid, doc.payload))
-          .toList();
-
-      records.sort((a, b) => b.measuredAt.compareTo(a.measuredAt));
-
-      final measurements = records.map((record) {
-        final date = record.measuredAt.toLocal();
-        final glucose = record.glucose;
-
-        final dateLabel =
-            '${date.day.toString().padLeft(2, '0')}/'
-            '${date.month.toString().padLeft(2, '0')}/'
-            '${date.year}';
-
-        final time =
-            '${date.hour.toString().padLeft(2, '0')}:'
-            '${date.minute.toString().padLeft(2, '0')}';
-
-        final status = glucose < 70
-            ? GlucoseLevelStatus.low
-            : glucose > 180
-            ? GlucoseLevelStatus.high
-            : GlucoseLevelStatus.normal;
-
-        return MeasurementModel(
-          id: record.id,
-          dateLabel: dateLabel,
-          time: time,
-          glucoseValue: glucose,
-          contextTag: 'Glicemia',
-          status: status,
-          insulin: record.insulin,
-          carbs: record.carbs,
-          notes: record.notes,
-          meal: record.meal,
+      await context.read<AppStore>().clearRecords();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Histórico excluído neste aparelho. A exclusão será sincronizada.',
+            ),
+          ),
         );
-      }).toList();
-
-      if (!mounted) return;
-
-      setState(() {
-        _measurements = measurements;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _loadError = 'Não foi possível carregar os registros.';
-        _isLoading = false;
-      });
+      }
+    } catch (error) {
+      if (mounted) showAppError(context, error);
     }
+  }
+
+  Future<void> _filter() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Todas as categorias'),
+              onTap: () {
+                setState(() => _category = null);
+                Navigator.pop(sheetContext);
+              },
+            ),
+            ...MeasurementCategory.values.map(
+              (c) => ListTile(
+                title: Text(c.label),
+                onTap: () {
+                  setState(() => _category = c);
+                  Navigator.pop(sheetContext);
+                },
+              ),
+            ),
+            ListTile(
+              title: const Text('Todo o histórico'),
+              onTap: () {
+                setState(() {
+                  _start = null;
+                  _end = null;
+                });
+                Navigator.pop(sheetContext);
+              },
+            ),
+            ListTile(
+              title: const Text('Escolher período'),
+              onTap: () async {
+                Navigator.pop(sheetContext);
+                final picked = await showDateRangePicker(
+                  context: context,
+                  firstDate: DateTime(2020),
+                  lastDate: DateTime(2030),
+                );
+                if (picked != null && mounted) {
+                  setState(() {
+                    _start = picked.start;
+                    _end = DateTime(
+                      picked.end.year,
+                      picked.end.month,
+                      picked.end.day + 1,
+                    );
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Diálogo para confirmação do processo de exclusão
+  Future<void> _showDeleteConfirmationDialog() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Aviso Crítico'),
+            ],
+          ),
+          content: const Text(
+            'Tem certeza de que deseja excluir permanentemente todo o seu histórico de medições? Esta ação não pode ser desfeita.',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: const Text(
+                'Cancelar',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(dialogContext).pop(); // fecha modal
+                _clearAllData(); // executa exclusão
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFF44336),
+                foregroundColor: Colors.white,
+                elevation: 0,
+              ),
+              child: const Text('Sim, Excluir'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final store = context.watch<AppStore>();
+    final records = store.select(start: _start, end: _end, category: _category);
+    final measurements = records
+        .map(
+          (r) => MeasurementModel(
+            id: r.id,
+            dateLabel: dateLabel(r.measuredAt),
+            time: timeLabel(r.measuredAt),
+            glucoseValue: r.glucose,
+            contextTag: r.category.label,
+            status: switch (store.settings.classify(r.glucose)) {
+              GlucoseStatus.hypo => GlucoseLevelStatus.low,
+              GlucoseStatus.belowTarget => GlucoseLevelStatus.belowTarget,
+              GlucoseStatus.inRange => GlucoseLevelStatus.normal,
+              GlucoseStatus.hyper => GlucoseLevelStatus.high,
+            },
+          ),
+        )
+        .toList();
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
 
@@ -181,24 +256,19 @@ class _TimelineScreenState extends State<TimelineScreen> {
                   child: Column(
                     children: [
                       // Cabeçalho Interno
-                      const _TimelineHeader(),
+                      _TimelineHeader(onFilter: _filter),
+                      if (store.loadError != null)
+                        Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Text(
+                            store.loadError!,
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
 
                       // Lista de Itens Rolável
                       Expanded(
-                        child: _isLoading
-                            ? const Center(
-                                child: CircularProgressIndicator(
-                                  color: Colors.white,
-                                ),
-                              )
-                            : _loadError != null
-                            ? Center(
-                                child: Text(
-                                  _loadError!,
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              )
-                            : _measurements.isEmpty
+                        child: measurements.isEmpty
                             ? const Center(
                                 child: Text(
                                   'Nenhum registro encontrado.',
@@ -212,20 +282,131 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16.0,
                                 ),
-                                itemCount: _measurements.length,
-                                separatorBuilder: (context, index) =>
+                                itemCount: measurements.length,
+                                separatorBuilder: (_, _) =>
                                     const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
-                                  return _MeasurementCard(
-                                    model: _measurements[index],
+                                  final record = records[index];
+                                  return Column(
+                                    key: ValueKey(record.id),
+                                    children: [
+                                      _MeasurementCard(
+                                        model: measurements[index],
+                                      ),
+                                      Container(
+                                        color: Colors.white,
+                                        child: Column(
+                                          children: [
+                                            Text(
+                                              'Refeição: ${mealLabel(record.meal)}',
+                                            ),
+                                            Text(
+                                              '${store.settings.classify(record.glucose).label} • Insulina: ${record.insulin ?? '--'} U • Carboidratos: ${record.carbs ?? '--'} g',
+                                            ),
+                                            if (record.notes.isNotEmpty)
+                                              Padding(
+                                                padding: const EdgeInsets.all(
+                                                  8,
+                                                ),
+                                                child: Text(record.notes),
+                                              ),
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.end,
+                                              children: [
+                                                IconButton(
+                                                  tooltip: 'Editar registro',
+                                                  icon: const Icon(
+                                                    Icons.edit_outlined,
+                                                  ),
+                                                  onPressed: () =>
+                                                      Navigator.of(
+                                                        context,
+                                                      ).push(
+                                                        MaterialPageRoute<void>(
+                                                          builder: (_) =>
+                                                              RegisterScreen(
+                                                                record: record,
+                                                              ),
+                                                        ),
+                                                      ),
+                                                ),
+                                                IconButton(
+                                                  tooltip: 'Excluir registro',
+                                                  icon: const Icon(
+                                                    Icons.delete_outline,
+                                                  ),
+                                                  onPressed: () async {
+                                                    final confirmed = await showDialog<bool>(
+                                                      context: context,
+                                                      builder:
+                                                          (
+                                                            dialogContext,
+                                                          ) => AlertDialog(
+                                                            title: const Text(
+                                                              'Excluir este registro?',
+                                                            ),
+                                                            actions: [
+                                                              TextButton(
+                                                                onPressed: () =>
+                                                                    Navigator.pop(
+                                                                      dialogContext,
+                                                                      false,
+                                                                    ),
+                                                                child:
+                                                                    const Text(
+                                                                      'Cancelar',
+                                                                    ),
+                                                              ),
+                                                              TextButton(
+                                                                onPressed: () =>
+                                                                    Navigator.pop(
+                                                                      dialogContext,
+                                                                      true,
+                                                                    ),
+                                                                child:
+                                                                    const Text(
+                                                                      'Excluir',
+                                                                    ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                    );
+                                                    if (confirmed != true ||
+                                                        !context.mounted) {
+                                                      return;
+                                                    }
+                                                    try {
+                                                      await store.deleteRecord(
+                                                        record.id,
+                                                      );
+                                                    } catch (error) {
+                                                      if (context.mounted) {
+                                                        showAppError(
+                                                          context,
+                                                          error,
+                                                        );
+                                                      }
+                                                    }
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
                                   );
                                 },
                               ),
                       ),
 
                       // Botão Destrutivo de Exclusão
-                      // Exclusão temporariamente desativada.
-                      // Será implementada com SQLite e sincronização no Firestore.
+                      if (measurements.isNotEmpty)
+                        _DeleteDataButton(
+                          onPressed: _showDeleteConfirmationDialog,
+                        ),
+
                       const SizedBox(height: 16),
                     ],
                   ),
@@ -244,7 +425,8 @@ class _TimelineScreenState extends State<TimelineScreen> {
 // ============================================================================
 
 class _TimelineHeader extends StatelessWidget {
-  const _TimelineHeader();
+  const _TimelineHeader({required this.onFilter});
+  final VoidCallback onFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -262,9 +444,7 @@ class _TimelineHeader extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              // TODO: Integração futura com filtro de histórico
-            },
+            onPressed: onFilter,
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.white,
               foregroundColor: const Color(0xFF0060C0),
@@ -293,13 +473,6 @@ class _MeasurementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final mealLabel = switch (model.meal) {
-      'breakfast' => 'Café da manhã',
-      'lunch' => 'Almoço',
-      'dinner' => 'Jantar',
-      _ => 'Não informada',
-    };
-
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -309,7 +482,6 @@ class _MeasurementCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Data da medição
           Text(
             model.dateLabel,
             style: const TextStyle(
@@ -318,10 +490,7 @@ class _MeasurementCard extends StatelessWidget {
               color: Colors.black87,
             ),
           ),
-
           const SizedBox(height: 12),
-
-          // Horário, glicemia e indicador
           Row(
             children: [
               Text(
@@ -332,7 +501,6 @@ class _MeasurementCard extends StatelessWidget {
                   color: Colors.black54,
                 ),
               ),
-
               const SizedBox(width: 12),
 
               Text(
@@ -344,8 +512,8 @@ class _MeasurementCard extends StatelessWidget {
                 ),
               ),
 
-              const SizedBox(width: 8),
-
+              const SizedBox(width: 8), // Espaçamento mínimo de segurança
+              // O Expanded empurra os itens para a direita, mas respeita o limite da tela
               Expanded(
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
@@ -358,9 +526,9 @@ class _MeasurementCard extends StatelessWidget {
                         shape: BoxShape.circle,
                       ),
                     ),
-
                     const SizedBox(width: 6),
-
+                    // O Flexible + ellipsis garante que se a tela for muito fina,
+                    // o texto "Pós-Refeição" vira "Pós-Ref..." em vez de causar erro.
                     Flexible(
                       child: Text(
                         model.contextTag,
@@ -376,50 +544,41 @@ class _MeasurementCard extends StatelessWidget {
               ),
             ],
           ),
-
-          // Separador das informações adicionais
-          const SizedBox(height: 12),
-          const Divider(height: 1),
-          const SizedBox(height: 12),
-
-          // Refeição
-          Text(
-            'Refeição: $mealLabel',
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
-          ),
-
-          // Insulina (somente quando informada)
-          if (model.insulin != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              'Insulina: ${model.insulin} unidades',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-          ],
-
-          // Carboidratos (somente quando informados)
-          if (model.carbs != null) ...[
-            const SizedBox(height: 6),
-            Text(
-              'Carboidratos: ${model.carbs} g',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-          ],
-
-          // Observações (somente quando preenchidas)
-          if (model.notes.trim().isNotEmpty) ...[
-            const SizedBox(height: 6),
-            Text(
-              'Observações: ${model.notes}',
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
-          ],
         ],
       ),
     );
   }
 }
 
+class _DeleteDataButton extends StatelessWidget {
+  final VoidCallback onPressed;
 
+  const _DeleteDataButton({required this.onPressed});
 
-
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: SizedBox(
+        width: double.infinity,
+        height: 54,
+        child: ElevatedButton.icon(
+          onPressed: onPressed,
+          icon: const Icon(Icons.delete_outline, size: 24),
+          label: const Text(
+            'Excluir Meus Dados',
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.white,
+            foregroundColor: const Color(0xFF0060C0),
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

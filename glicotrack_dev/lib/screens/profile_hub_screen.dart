@@ -1,4 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+import '../presentation/app_store.dart';
+import '../presentation/glucose_style.dart';
 
 import 'personal_info_screen.dart';
 import 'profile_settings_screen.dart';
@@ -54,6 +58,21 @@ class ProfileHubScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 24),
 
+                Text(
+                  context.watch<AppStore>().profile.name,
+                  textAlign: TextAlign.center,
+                ),
+                TextButton.icon(
+                  icon: const Icon(Icons.logout),
+                  label: const Text('Sair da conta'),
+                  onPressed: () async {
+                    try {
+                      await context.read<AppStore>().logout();
+                    } catch (error) {
+                      if (context.mounted) showAppError(context, error);
+                    }
+                  },
+                ),
                 // Card 1: Dados Pessoais
                 _MenuActionCard(
                   title: 'Dados Pessoais',

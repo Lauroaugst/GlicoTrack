@@ -1,5 +1,13 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:image_picker/image_picker.dart';
+
+import 'dart:convert';
+
+import '../presentation/app_store.dart';
+import '../presentation/glucose_style.dart';
+import '../domain/models.dart';
 
 class PersonalInfoScreen extends StatefulWidget {
   const PersonalInfoScreen({super.key});
@@ -9,15 +17,42 @@ class PersonalInfoScreen extends StatefulWidget {
 }
 
 class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Gabriel da Silva',
-  );
-  final TextEditingController _ageController = TextEditingController(
-    text: '65',
-  );
-  final TextEditingController _weightController = TextEditingController(
-    text: '78.5',
-  );
+  final _nameController = TextEditingController();
+  final _ageController = TextEditingController();
+  final _weightController = TextEditingController();
+  String? _photo;
+  bool _saving = false;
+  bool _initialized = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    final profile = context.read<AppStore>().profile;
+    _nameController.text = profile.name;
+    _ageController.text = profile.age?.toString() ?? '';
+    _weightController.text = profile.weight?.toString() ?? '';
+    _photo = profile.photo;
+  }
+
+  Future<void> _pickPhoto() async {
+    try {
+      final file = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 256,
+        maxHeight: 256,
+        imageQuality: 70,
+      );
+      if (file == null) return;
+      final bytes = await file.readAsBytes();
+      if (bytes.length > 220000) {
+        throw const FormatException('Selecione uma foto menor.');
+      }
+      if (mounted) setState(() => _photo = base64Encode(bytes));
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    }
+  }
 
   @override
   void dispose() {
@@ -27,17 +62,35 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
     super.dispose();
   }
 
-  void _saveProfile() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Dados salvos com sucesso!',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  Future<void> _saveProfile() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      final store = context.read<AppStore>();
+      await store.saveProfile(
+        PatientProfile(
+          name: _nameController.text.trim(),
+          email: store.profile.email,
+          createdAt: store.profile.createdAt,
+          age: _ageController.text.isEmpty
+              ? null
+              : int.parse(_ageController.text),
+          weight: _weightController.text.isEmpty
+              ? null
+              : double.parse(_weightController.text.replaceAll(',', '.')),
+          photo: _photo,
         ),
-        backgroundColor: Color(0xFF0060C0),
-      ),
-    );
-    Navigator.of(context).pop();
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Dados salvos neste aparelho.')),
+      );
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -86,19 +139,24 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     label: 'Foto de perfil. Toque para selecionar uma imagem.',
                     button: true,
                     child: InkWell(
-                      onTap: () {},
+                      onTap: _pickPhoto,
                       borderRadius: BorderRadius.circular(60),
                       child: Stack(
                         alignment: Alignment.bottomRight,
                         children: [
-                          const CircleAvatar(
+                          CircleAvatar(
+                            backgroundImage: _photo == null
+                                ? null
+                                : MemoryImage(base64Decode(_photo!)),
                             radius: 56,
                             backgroundColor: Color(0xFF003D80),
-                            child: Icon(
-                              Icons.person_rounded,
-                              size: 72,
-                              color: Colors.white,
-                            ),
+                            child: _photo != null
+                                ? null
+                                : const Icon(
+                                    Icons.person_rounded,
+                                    size: 72,
+                                    color: Colors.white,
+                                  ),
                           ),
                           Container(
                             padding: const EdgeInsets.all(8),
@@ -154,7 +212,7 @@ class _PersonalInfoScreenState extends State<PersonalInfoScreen> {
                     width: double.infinity,
                     constraints: const BoxConstraints(minHeight: 64),
                     child: ElevatedButton(
-                      onPressed: _saveProfile,
+                      onPressed: _saving ? null : _saveProfile,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4889DC),
                         foregroundColor: Colors.white,
@@ -215,7 +273,7 @@ class _SimpleTextField extends StatelessWidget {
             keyboardType: keyboardType,
             style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
             inputFormatters: isNumber
-                ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))]
+                ? [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))]
                 : [],
             decoration: InputDecoration(
               filled: true,

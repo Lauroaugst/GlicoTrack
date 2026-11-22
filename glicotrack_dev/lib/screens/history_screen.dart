@@ -1,8 +1,15 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
+import 'package:flutter/foundation.dart';
+import 'package:provider/provider.dart';
 
-import 'dart:async';
-import 'package:glicotrack_dev/data/local_database.dart';
-import 'package:glicotrack_dev/domain/models.dart';
+import 'dart:math' as math;
+
+import '../domain/models.dart';
+import '../presentation/app_store.dart';
+import '../presentation/history_summary.dart';
+import '../presentation/glucose_style.dart';
+import '../services/csv_service.dart';
+
 import 'timeline_screen.dart'; // Import da tela da Linha do Tempo
 import '../services/pdf_service.dart'; // Import do gerador de PDF
 
@@ -10,125 +17,27 @@ import '../services/pdf_service.dart'; // Import do gerador de PDF
 // DATA MODELS & MOCKS
 // ============================================================================
 
-class GlucoseReading {
-  final String day;
-  final double value;
-  final Color color;
-  final DateTime measuredAt;
-
-  const GlucoseReading({
-    required this.day,
-    required this.value,
-    required this.color,
-    required this.measuredAt,
-  });
-}
-
-class WeeklySummaryModel {
-  final String dateRange;
-  final double average;
-  final double min;
-  final double max;
-  final List<GlucoseReading> readings;
-
-  const WeeklySummaryModel({
-    required this.dateRange,
-    required this.average,
-    required this.min,
-    required this.max,
-    required this.readings,
-  });
-}
-
-// ============================================================================
-// MAIN SCREEN (STATEFUL)
-// ============================================================================
-
 class HistoryScreen extends StatefulWidget {
-  final LocalDatabase localDatabase;
-
-  const HistoryScreen({
-    super.key,
-    required this.localDatabase,
-  });
+  const HistoryScreen({super.key});
 
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  List<HealthRecord> _records = [];
-  bool _isLoading = true;
-  String? _loadError;
-  StreamSubscription<void>? _databaseSubscription;
-  Future<void> _loadRecords() async {
-  setState(() {
-    _isLoading = true;
-    _loadError = null;
-    
-
-    
-  });
-
-  try {
-    final documents = await widget.localDatabase.all(kind: 'record');
-
-    final records = documents
-        .where((doc) => !doc.deleted)
-        .map(
-          (doc) => HealthRecord.fromJson(
-            doc.id,
-            doc.uid,
-            doc.payload,
-          ),
-        )
-        .toList();
-
-    records.sort(
-      (a, b) => b.measuredAt.compareTo(a.measuredAt),
-    );
-
-    if (!mounted) return;
-
-    setState(() {
-      _records = records;
-      _isLoading = false;
-    });
-  } catch (e) {
-    if (!mounted) return;
-
-    setState(() {
-      _loadError = 'Não foi possível carregar os registros.';
-      _isLoading = false;
-    });
-  }
-}
   // Define o período inicial como a última semana até hoje
   late DateTimeRange _selectedDateRange;
+  MeasurementCategory? _category;
 
- @override
-void initState() {
-  super.initState();
-
-  final now = DateTime.now();
-
-  _selectedDateRange = DateTimeRange(
-    start: now.subtract(const Duration(days: 6)),
-    end: now,
-  );
-
-  _databaseSubscription = widget.localDatabase.changes.listen((_) {
-    _loadRecords();
-  });
-
-  _loadRecords();
-}
-
-@override
-void dispose() {
-  _databaseSubscription?.cancel();
-  super.dispose();
-}
+  @override
+  void initState() {
+    super.initState();
+    final now = DateTime.now();
+    _selectedDateRange = DateTimeRange(
+      start: now.subtract(const Duration(days: 6)),
+      end: now,
+    );
+  }
 
   /// Exibe o seletor nativo de intervalo de datas (Material 3) com alto contraste
   Future<void> _pickDateRange() async {
@@ -164,75 +73,18 @@ void dispose() {
   }
 
   @override
-Widget build(BuildContext context) {
-  final recordsInRange = _records.where((record) {
-    final date = record.measuredAt.toLocal();
-
-    final start = DateTime(
-      _selectedDateRange.start.year,
-      _selectedDateRange.start.month,
-      _selectedDateRange.start.day,
+  Widget build(BuildContext context) {
+    final store = context.watch<AppStore>();
+    final start = DateUtils.dateOnly(_selectedDateRange.start);
+    final endDate = _selectedDateRange.end;
+    final end = DateTime(endDate.year, endDate.month, endDate.day + 1);
+    final currentSummary = WeeklySummaryModel(
+      start: start,
+      end: end,
+      records: store.select(start: start, end: end, category: _category),
+      settings: store.settings,
+      profile: store.profile,
     );
-
-    final end = DateTime(
-      _selectedDateRange.end.year,
-      _selectedDateRange.end.month,
-      _selectedDateRange.end.day,
-      23, 59, 59, 999,
-    );
-
-    return !date.isBefore(start) && !date.isAfter(end);
-  }).toList();
-
-  final values = recordsInRange
-      .map((record) => record.glucose.toDouble())
-      .toList();
-
-  final average = values.isEmpty
-      ? 0.0
-      : values.reduce((a, b) => a + b) / values.length;
-
-  final minimum = values.isEmpty
-      ? 0.0
-      : values.reduce((a, b) => a < b ? a : b);
-
-  final maximum = values.isEmpty
-      ? 0.0
-      : values.reduce((a, b) => a > b ? a : b);
-
-  final start = _selectedDateRange.start;
-  final end = _selectedDateRange.end;
-
-  final dateRange =
-      '${start.day.toString().padLeft(2, '0')}/${start.month.toString().padLeft(2, '0')} até '
-      '${end.day.toString().padLeft(2, '0')}/${end.month.toString().padLeft(2, '0')}';
-
-  final currentSummary = WeeklySummaryModel(
-    dateRange: dateRange,
-    average: average,
-    min: minimum,
-    max: maximum,
-    readings: recordsInRange.map((record) {
-      final date = record.measuredAt.toLocal();
-
-      const weekdays = [
-        'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB', 'DOM',
-      ];
-
-      final glucose = record.glucose.toDouble();
-
-      return GlucoseReading(
-  day: weekdays[date.weekday - 1],
-  value: glucose,
-  measuredAt: date,
-  color: glucose < 70
-      ? const Color(0xFFF44336)
-      : glucose > 180
-          ? const Color(0xFFFF9800)
-          : const Color(0xFF4CAF50),
-);
-    }).toList(),
-  );
 
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
@@ -264,12 +116,57 @@ Widget build(BuildContext context) {
         ),
         child: Column(
           children: [
-            // Card do Gráfico (Agora com o Seletor de Data)
-           _WeeklyChartCard(
-            summary: currentSummary,
-                onDateRangeTap: _pickDateRange,
-                  dateRange: _selectedDateRange,
+            Wrap(
+              spacing: 8,
+              children: [
+                ActionChip(
+                  label: const Text('Semana'),
+                  onPressed: () {
+                    final n = DateTime.now();
+                    setState(
+                      () => _selectedDateRange = DateTimeRange(
+                        start: DateTime(n.year, n.month, n.day - 6),
+                        end: n,
+                      ),
+                    );
+                  },
                 ),
+                ActionChip(
+                  label: const Text('Mês'),
+                  onPressed: () {
+                    final n = DateTime.now();
+                    setState(
+                      () => _selectedDateRange = DateTimeRange(
+                        start: DateTime(n.year, n.month, 1),
+                        end: n,
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+            DropdownButton<MeasurementCategory?>(
+              value: _category,
+              isExpanded: true,
+              items: [
+                const DropdownMenuItem<MeasurementCategory?>(
+                  value: null,
+                  child: Text('Todas as categorias'),
+                ),
+                ...MeasurementCategory.values.map(
+                  (c) => DropdownMenuItem(value: c, child: Text(c.label)),
+                ),
+              ],
+              onChanged: (c) => setState(() => _category = c),
+            ),
+            if (currentSummary.records.isEmpty)
+              const Text('Nenhuma medição neste período.'),
+            if (store.loadError != null) Text(store.loadError!),
+            // Card do Gráfico (Agora com o Seletor de Data)
+            _WeeklyChartCard(
+              summary: currentSummary,
+              onDateRangeTap: _pickDateRange,
+            ),
             const SizedBox(height: 16),
 
             // Card de Resumo Numérico
@@ -277,9 +174,17 @@ Widget build(BuildContext context) {
             const SizedBox(height: 24),
 
             // Botões de Ação (Repassando o summary com a data certa)
-            _ActionButtonsRow(
-                 summary: currentSummary,
-                 localDatabase: widget.localDatabase,
+            _ActionButtonsRow(summary: currentSummary),
+            TextButton.icon(
+              icon: const Icon(Icons.table_view),
+              label: const Text('Exportar CSV'),
+              onPressed: () async {
+                try {
+                  await CsvService.share(currentSummary);
+                } catch (error) {
+                  if (context.mounted) showAppError(context, error);
+                }
+              },
             ),
           ],
         ),
@@ -296,13 +201,8 @@ Widget build(BuildContext context) {
 class _WeeklyChartCard extends StatelessWidget {
   final WeeklySummaryModel summary;
   final VoidCallback onDateRangeTap;
-  final DateTimeRange dateRange;
 
-  const _WeeklyChartCard({
-    required this.summary,
-    required this.onDateRangeTap,
-    required this.dateRange,
-  });
+  const _WeeklyChartCard({required this.summary, required this.onDateRangeTap});
 
   @override
   Widget build(BuildContext context) {
@@ -316,29 +216,6 @@ class _WeeklyChartCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (_isLoading)
-  const Padding(
-    padding: EdgeInsets.only(bottom: 16),
-    child: CircularProgressIndicator(),
-  ),
-
-if (_loadError != null)
-  Padding(
-    padding: const EdgeInsets.only(bottom: 16),
-    child: Text(
-      _loadError!,
-      style: const TextStyle(color: Colors.red),
-    ),
-  ),
-
-if (!_isLoading && _loadError == null && recordsInRange.isEmpty)
-  const Padding(
-    padding: EdgeInsets.only(bottom: 16),
-    child: Text(
-      'Nenhum registro encontrado para o período selecionado.',
-      textAlign: TextAlign.center,
-    ),
-  ),
           // Título
           const Text(
             'Desempenho Glicêmico',
@@ -359,10 +236,13 @@ if (!_isLoading && _loadError == null && recordsInRange.isEmpty)
           const SizedBox(height: 24),
 
           // Gráfico de Alta Performance (CustomPainter com Zonas Alvo)
-         _GlucoseCustomChart(
-  readings: summary.readings,
-  dateRange: dateRange,
-),
+          _GlucoseCustomChart(
+            readings: summary.readings,
+            lower: summary.settings.lower.toDouble(),
+            upper: summary.settings.upper.toDouble(),
+            start: summary.start,
+            end: summary.end,
+          ),
         ],
       ),
     );
@@ -430,11 +310,16 @@ class _DateRangeSelectorButton extends StatelessWidget {
 /// Gráfico de Altíssima Performance (CustomPainter) com Zonas Médicas
 class _GlucoseCustomChart extends StatelessWidget {
   final List<GlucoseReading> readings;
-  final DateTimeRange dateRange;
-
+  final double lower;
+  final double upper;
+  final DateTime start;
+  final DateTime end;
   const _GlucoseCustomChart({
     required this.readings,
-    required this.dateRange,
+    required this.lower,
+    required this.upper,
+    required this.start,
+    required this.end,
   });
 
   @override
@@ -445,7 +330,10 @@ class _GlucoseCustomChart extends StatelessWidget {
         size: const Size(double.infinity, 240),
         painter: GlucoseMedicalChartPainter(
           readings: readings,
-          dateRange: dateRange,
+          lower: lower,
+          upper: upper,
+          start: start,
+          end: end,
         ),
       ),
     );
@@ -454,17 +342,29 @@ class _GlucoseCustomChart extends StatelessWidget {
 
 class GlucoseMedicalChartPainter extends CustomPainter {
   final List<GlucoseReading> readings;
-  final DateTimeRange dateRange;
 
   final double limitHypo = 70.0;
-  final double limitHyper = 180.0;
-  final double chartMaxY = 300.0;
-  final double chartMinY = 20.0;
+  final double lower;
+  final double limitHyper;
+  final DateTime start;
+  final DateTime end;
+  double get chartMaxY => math.max(
+    300,
+    math.max(
+      limitHyper + 20,
+      readings.fold<double>(0, (v, r) => math.max(v, r.value)) + 20,
+    ),
+  );
+  final double chartMinY = 0.0;
 
   GlucoseMedicalChartPainter({
-  required this.readings,
-  required this.dateRange,
-});
+    required List<GlucoseReading> readings,
+    this.lower = 70,
+    double upper = 180,
+    required this.start,
+    required this.end,
+  }) : readings = List.unmodifiable(readings),
+       limitHyper = upper;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -485,7 +385,7 @@ class GlucoseMedicalChartPainter extends CustomPainter {
       Paint()..color = const Color(0xFFF44336).withValues(alpha: 0.15),
     );
     canvas.drawRect(
-      Rect.fromLTRB(leftOffset, getY(limitHyper), size.width, getY(limitHypo)),
+      Rect.fromLTRB(leftOffset, getY(limitHyper), size.width, getY(lower)),
       Paint()..color = const Color(0xFF4CAF50).withValues(alpha: 0.15),
     );
     canvas.drawRect(
@@ -493,22 +393,30 @@ class GlucoseMedicalChartPainter extends CustomPainter {
       Paint()..color = const Color(0xFFFF9800).withValues(alpha: 0.15),
     );
 
+    if (lower > limitHypo) {
+      canvas.drawRect(
+        Rect.fromLTRB(leftOffset, getY(lower), size.width, getY(limitHypo)),
+        Paint()..color = const Color(0xFFFFC107).withValues(alpha: 0.15),
+      );
+    }
     final linePaint = Paint()
       ..color = Colors.black12
       ..strokeWidth = 1;
     final textStyleY = const TextStyle(
+      fontFamily: 'Roboto',
       color: Colors.black87,
       fontSize: 12,
       fontWeight: FontWeight.bold,
     );
     final textStyleX = const TextStyle(
+      fontFamily: 'Roboto',
       color: Colors.black87,
       fontSize: 12,
       fontWeight: FontWeight.bold,
     );
 
     // Eixo Y
-    for (var y in [chartMaxY, 180.0, 70.0, chartMinY]) {
+    for (var y in {chartMaxY, limitHyper, lower, limitHypo, chartMinY}) {
       final yPos = getY(y);
       canvas.drawLine(
         Offset(leftOffset, yPos),
@@ -528,71 +436,35 @@ class GlucoseMedicalChartPainter extends CustomPainter {
         ),
       );
     }
-    final startDate = DateTime(
-  dateRange.start.year,
-  dateRange.start.month,
-  dateRange.start.day,
-);
 
-final endDate = DateTime(
-  dateRange.end.year,
-  dateRange.end.month,
-  dateRange.end.day,
-).add(const Duration(days: 1));
-
-final totalMilliseconds =
-    endDate.difference(startDate).inMilliseconds;
-
-double getX(DateTime measuredAt) {
-  final elapsedMilliseconds =
-      measuredAt.toLocal().difference(startDate).inMilliseconds;
-
-  final percent = elapsedMilliseconds / totalMilliseconds;
-
-  return leftOffset + percent.clamp(0.0, 1.0) * graphWidth;
-}
     // Eixo X
-    // Eixo X - datas do período selecionado
-const int divisions = 6;
+    final days = List.generate(7, (i) {
+      final d = start.add(
+        Duration(
+          milliseconds:
+              ((end.millisecondsSinceEpoch - start.millisecondsSinceEpoch - 1) *
+                      i /
+                      6)
+                  .round(),
+        ),
+      );
+      return '${d.day}/${d.month}';
+    });
+    final double stepX = graphWidth / (days.length - 1);
 
-for (int i = 0; i <= divisions; i++) {
-  final fraction = i / divisions;
+    for (int i = 0; i < days.length; i++) {
+      final xPos = leftOffset + (i * stepX);
+      canvas.drawLine(Offset(xPos, 0), Offset(xPos, graphHeight), linePaint);
 
-  final xPos = leftOffset + fraction * graphWidth;
-
-  final timestamp = startDate.add(
-    Duration(
-      milliseconds: (totalMilliseconds * fraction).round(),
-    ),
-  );
-
-  final label =
-      '${timestamp.day.toString().padLeft(2, '0')}/'
-      '${timestamp.month.toString().padLeft(2, '0')}';
-
-  canvas.drawLine(
-    Offset(xPos, 0),
-    Offset(xPos, graphHeight),
-    linePaint,
-  );
-
-  final textPainter = TextPainter(
-    text: TextSpan(
-      text: label,
-      style: textStyleX,
-    ),
-    textDirection: TextDirection.ltr,
-  )..layout();
-
-  textPainter.paint(
-    canvas,
-    Offset(
-      xPos - textPainter.width / 2,
-      graphHeight + 8,
-    ),
-  );
-}
-
+      final textPainter = TextPainter(
+        text: TextSpan(text: days[i], style: textStyleX),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      textPainter.paint(
+        canvas,
+        Offset(xPos - (textPainter.width / 2), graphHeight + 8),
+      );
+    }
 
     // Linha de Conexão
     if (readings.isEmpty) return;
@@ -606,15 +478,11 @@ for (int i = 0; i <= divisions; i++) {
     final Path path = Path();
     final List<Offset> points = [];
 
-    final sortedReadings = List<GlucoseReading>.from(readings)
-  ..sort((a, b) => a.measuredAt.compareTo(b.measuredAt));
-
-for (final reading in sortedReadings) {
-  final x = getX(reading.measuredAt);
-  final y = getY(reading.value);
-
-  points.add(Offset(x, y));
-}
+    for (var reading in readings) {
+      points.add(
+        Offset(leftOffset + reading.x * graphWidth, getY(reading.value)),
+      );
+    }
 
     if (points.isNotEmpty) {
       path.moveTo(points.first.dx, points.first.dy);
@@ -637,14 +505,19 @@ for (final reading in sortedReadings) {
         points[i],
         5.0,
         Paint()
-          ..color = sortedReadings[i].color
+          ..color = readings[i].color
           ..style = PaintingStyle.fill,
       );
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant GlucoseMedicalChartPainter oldDelegate) =>
+      lower != oldDelegate.lower ||
+      limitHyper != oldDelegate.limitHyper ||
+      start != oldDelegate.start ||
+      end != oldDelegate.end ||
+      !listEquals(readings, oldDelegate.readings);
 }
 
 /// Card contendo o resumo numérico (Média, Mínima, Máxima)
@@ -676,12 +549,36 @@ class _SummaryCard extends StatelessWidget {
           const SizedBox(height: 16),
           _SummaryRow(
             label: 'Média',
-            value: '${summary.average.toInt()} mg/dL',
+            value: summary.stats.count == 0
+                ? '--'
+                : '${summary.average.toStringAsFixed(1)} mg/dL',
           ),
           const Divider(height: 24, color: Colors.black12),
-          _SummaryRow(label: 'Mínima', value: '${summary.min.toInt()} mg/dL'),
+          _SummaryRow(
+            label: 'Mínima',
+            value: summary.stats.count == 0
+                ? '--'
+                : '${summary.min.toInt()} mg/dL',
+          ),
           const Divider(height: 24, color: Colors.black12),
-          _SummaryRow(label: 'Máxima', value: '${summary.max.toInt()} mg/dL'),
+          _SummaryRow(
+            label: 'Máxima',
+            value: summary.stats.count == 0
+                ? '--'
+                : '${summary.max.toInt()} mg/dL',
+          ),
+          _SummaryRow(label: 'Medições', value: '${summary.stats.count}'),
+          _SummaryRow(
+            label: 'Na faixa',
+            value: '${summary.stats.inRangePercent.toStringAsFixed(0)}%',
+          ),
+          _SummaryRow(
+            label: 'Medições por dia',
+            value: summary.stats.frequency.toStringAsFixed(1),
+          ),
+          Text(
+            TrendIndicator.analyze(summary.records, summary.settings).message,
+          ),
         ],
       ),
     );
@@ -720,12 +617,9 @@ class _SummaryRow extends StatelessWidget {
 /// Row contendo os botões (agora recebendo o contexto das datas)
 class _ActionButtonsRow extends StatelessWidget {
   final WeeklySummaryModel summary;
-  final LocalDatabase localDatabase;
 
-  const _ActionButtonsRow({
-    required this.summary,
-    required this.localDatabase,
-  });
+  const _ActionButtonsRow({required this.summary});
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -736,7 +630,11 @@ class _ActionButtonsRow extends StatelessWidget {
             icon: Icons.picture_as_pdf_rounded,
             onTap: () async {
               // Passa os dados dinâmicos do período para o gerador
-              await PdfService.generateMedicalReport(summary);
+              try {
+                await PdfService.generateMedicalReport(summary);
+              } catch (error) {
+                if (context.mounted) showAppError(context, error);
+              }
             },
           ),
         ),
@@ -748,9 +646,8 @@ class _ActionButtonsRow extends StatelessWidget {
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
-                  builder: (context) => TimelineScreen(
-                    localDatabase: localDatabase,
-                  ),
+                  builder: (context) =>
+                      TimelineScreen(start: summary.start, end: summary.end),
                 ),
               );
             },

@@ -1,5 +1,7 @@
 ### 2.4 Justificativas
 
+> Unidade II: as decisões anteriores permanecem como referência. A implementação e as justificativas de Provider, SQLCipher, armazenamento seguro e Firestore estão em [arquitetura-unidade-ii.md](arquitetura-unidade-ii.md). Foram conectadas as telas existentes, acrescentando apenas controles necessários de categoria, horário, observações e autenticação. O botão de salvar permanece acessível com o teclado aberto; o fundo reage à classificação exigida no aditivo. O serviço PDF original foi ampliado, e o CustomPainter preservado com repintura condicional. A exceção sonora para hipoglicemia segue o PDF e RF06.
+
 Registre brevemente as principais decisões de interface e arquitetura, como:
 
 *   **Escolha das cores (paleta e contraste):** A interface adota majoritariamente o branco e o azul-claro para gerar uma sensação de assepsia e clareza mental. O uso de cores severas é obrigatório para indicar o estado de saúde: vermelho para hipoglicemia (abaixo de 70 mg/dL), verde para a faixa normal e laranja para hiperglicemia. Essa escolha de contraste ajuda pacientes com baixa escolaridade ou analfabetos funcionais a entenderem o resultado imediatamente apenas pela cor.

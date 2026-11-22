@@ -10,3 +10,4 @@
 **/.firebase/
 **/*-debug.log
 **/firebase.local.json
+**/firebase.*.local.json

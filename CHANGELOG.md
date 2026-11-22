@@ -2,6 +2,30 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
+## [Unidade II - Integração do backend às telas] - 2026-11-21
+
+### Adicionado
+
+* Fluxo de login, cadastro, recuperação de senha, logout e vinculação da sessão anônima existente a uma conta, preservando o UID.
+* Provider para integrar Home, Registro, Perfil, Histórico e linha do tempo ao backend já versionado.
+* Edição/exclusão de registros, categorias, metas, perfil, indicadores reais e exportação CSV.
+* Documentação de arquitetura, configuração, navegação, planejamento, rastreabilidade e validação.
+
+### Integrado e corrigido
+
+* Incorporados os 24 commits da main posteriores a `61f3be0`, mantendo `firebase_options.dart` e reaproveitando `AppBootstrap`.
+* Inicialização Firebase passou a usar as opções publicadas pelo grupo; configuração alternativa por dart-define preservada.
+* Consultas e atualização de estado centralizadas no AppStore, incluindo correção das referências fora de escopo no Histórico.
+* Refeição, insulina, carboidratos e observações da linha do tempo preservados na integração com edição e exclusão.
+* CustomPainter existente otimizado por conteúdo, com limites personalizados e posição cronológica; PdfService ampliado com dados reais e fontes locais.
+* Confirmação após commit SQLite, botão acessível com teclado e alertas visuais/ponte sonora conectados ao formulário.
+* Backup, restauração e exclusão passaram a acionar os serviços reais. Sincronização não é iniciada duas vezes pela inicialização da sessão.
+
+### Validação
+
+* Resultados e limitações registrados em `docs/validacao-unidade-ii.md`; os testes utilizam emuladores demo, sem implantar alterações no Firebase real.
+
+
 ## [Unidade II - Base de domínio e dados] - 2026-11-17
 
 ### Adicionado

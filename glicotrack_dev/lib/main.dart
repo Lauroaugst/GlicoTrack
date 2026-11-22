@@ -1,44 +1,15 @@
-import 'package:flutter/material.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:glicotrack_dev/screens/splash_screen.dart';
+import 'package:material_ui/material_ui.dart';
 
-import 'services/app_bootstrap.dart';
+import 'data/firebase_bootstrap.dart';
+import 'screens/auth_gate.dart';
+import 'screens/splash_screen.dart';
 
-import 'firebase_options.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Inicializa o Firebase.
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-
-  // Recupera o usuário autenticado.
-  var user = FirebaseAuth.instance.currentUser;
-
-  // Cria uma sessão anônima caso não exista usuário.
-  if (user == null) {
-    final credential = await FirebaseAuth.instance.signInAnonymously();
-    user = credential.user;
-  }
-
-  if (user == null) {
-    throw StateError('Não foi possível autenticar o usuário.');
-  }
-
-  // Inicializa SQLite, Firestore e sincronização.
-  final services = await AppBootstrap.initialize();
-
-  debugPrint('Banco de dados inicializado para o usuário autenticado.');
-
-  // Inicia a interface do aplicativo.
-  runApp(GlicoTrackApp(services: services));
+void main() {
+  runApp(const GlicoTrackApp());
 }
 
 class GlicoTrackApp extends StatelessWidget {
-  const GlicoTrackApp({super.key, required this.services});
-
-  final AppBootstrap services;
+  const GlicoTrackApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -49,11 +20,54 @@ class GlicoTrackApp extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFE3F1FD),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF0060C0)),
-        fontFamily: 'Roboto',
+        fontFamily: 'Roboto', // Ou a fonte que estiver utilizando
       ),
-     home: SplashScreen(
-  localDatabase: services.local,
-),
+      // O aplicativo agora começa pela SplashScreen
+      home: const _Bootstrap(),
     );
   }
+}
+
+class _Bootstrap extends StatefulWidget {
+  const _Bootstrap();
+  @override
+  State<_Bootstrap> createState() => _BootstrapState();
+}
+
+class _BootstrapState extends State<_Bootstrap> {
+  late Future<void> _initialization = initializeFirebase();
+  @override
+  Widget build(BuildContext context) => FutureBuilder<void>(
+    future: _initialization,
+    builder: (context, snapshot) {
+      if (snapshot.hasError) {
+        return Scaffold(
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.settings_outlined, size: 64),
+                  const Text(
+                    'A conexão segura precisa ser configurada. Consulte a configuração Firebase na documentação do projeto.',
+                    textAlign: TextAlign.center,
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        setState(() => _initialization = initializeFirebase()),
+                    child: const Text('Tentar novamente'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      }
+      if (snapshot.connectionState != ConnectionState.done) {
+        return const SplashScreen();
+      }
+      return const AuthGate();
+    },
+  );
 }

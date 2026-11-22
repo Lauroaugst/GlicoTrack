@@ -1,20 +1,11 @@
-import 'package:flutter/material.dart';
-
-import 'package:glicotrack_dev/data/local_database.dart';
-import 'main_screen.dart';
+import 'package:material_ui/material_ui.dart';
 
 // ============================================================================
 // MAIN SCREEN (STATEFUL - COM ANIMAÇÕES IMPLÍCITAS)
 // ============================================================================
 
 class SplashScreen extends StatefulWidget {
-  // Banco de dados já inicializado pelo AppBootstrap.
-  final LocalDatabase localDatabase;
-
-  const SplashScreen({
-    super.key,
-    required this.localDatabase,
-  });
+  const SplashScreen({super.key});
 
   @override
   State<SplashScreen> createState() => _SplashScreenState();
@@ -40,28 +31,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
 
-    // 2. Aguarda o tempo de exibição da marca (2.5s)
-    await Future.delayed(const Duration(milliseconds: 2500));
-
-    // 3. Transição suave (Fade) para a MainScreen ao invés de um corte seco
-    if (mounted) {
-      Navigator.of(context).pushReplacement(
-        PageRouteBuilder(
-          transitionDuration: const Duration(milliseconds: 800),
-          pageBuilder: (context, animation, secondaryAnimation) =>
-    MainScreen(
-      localDatabase: widget.localDatabase,
-    ),
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Animação M3 suave de transição entre telas
-            return FadeTransition(
-              opacity: CurveTween(curve: Curves.easeInOut).animate(animation),
-              child: child,
-            );
-          },
-        ),
-      );
-    }
+    // Bootstrap controls authentication and lifetime; no artificial startup delay.
   }
 
   @override

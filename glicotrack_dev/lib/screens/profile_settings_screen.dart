@@ -1,5 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+
+import '../domain/models.dart';
+import '../presentation/app_store.dart';
+import '../presentation/glucose_style.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   const ProfileSettingsScreen({super.key});
@@ -13,6 +18,8 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   late final TextEditingController _normalMinController;
   late final TextEditingController _normalMaxController;
   late final TextEditingController _highController;
+  bool _saving = false;
+  bool _initialized = false;
 
   @override
   void initState() {
@@ -27,22 +34,48 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
   void dispose() {
     _lowController.dispose();
     _normalMinController.dispose();
+    _normalMaxController.removeListener(_mirrorUpper);
     _normalMaxController.dispose();
     _highController.dispose();
     super.dispose();
   }
 
-  void _saveSettings() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text(
-          'Configurações salvas!',
-          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_initialized) return;
+    _initialized = true;
+    final settings = context.read<AppStore>().settings;
+    _normalMinController.text = '${settings.lower}';
+    _normalMaxController.text = '${settings.upper}';
+    _highController.text = '${settings.upper}';
+    _normalMaxController.addListener(_mirrorUpper);
+  }
+
+  void _mirrorUpper() {
+    _highController.text = _normalMaxController.text;
+  }
+
+  Future<void> _saveSettings() async {
+    if (_saving) return;
+    setState(() => _saving = true);
+    try {
+      await context.read<AppStore>().saveSettings(
+        GlucoseSettings(
+          lower: int.parse(_normalMinController.text),
+          upper: int.parse(_normalMaxController.text),
         ),
-        backgroundColor: Color(0xFF0060C0),
-      ),
-    );
-    Navigator.of(context).pop();
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Configurações salvas neste aparelho.')),
+      );
+      Navigator.of(context).pop();
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
   }
 
   @override
@@ -92,7 +125,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Defina os valores que classificarão suas medições.',
+                  'Defina sua meta. O alerta de hipoglicemia permanece abaixo de 70 mg/dL.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -141,7 +174,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                 SizedBox(
                   height: 64,
                   child: ElevatedButton(
-                    onPressed: _saveSettings,
+                    onPressed: _saving ? null : _saveSettings,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4889DC),
                       foregroundColor: Colors.white,
@@ -174,8 +207,9 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
 
 class _SmallNumberInput extends StatelessWidget {
   final TextEditingController controller;
+  final bool readOnly;
 
-  const _SmallNumberInput({required this.controller});
+  const _SmallNumberInput({required this.controller, this.readOnly = false});
 
   @override
   Widget build(BuildContext context) {
@@ -184,6 +218,7 @@ class _SmallNumberInput extends StatelessWidget {
       height: 44,
       margin: const EdgeInsets.symmetric(horizontal: 6.0),
       child: TextField(
+        readOnly: readOnly,
         controller: controller,
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
@@ -244,7 +279,7 @@ class _ThresholdSettingRow extends StatelessWidget {
               prefixText,
               style: const TextStyle(fontSize: 16, color: Colors.black87),
             ),
-            _SmallNumberInput(controller: controller),
+            _SmallNumberInput(controller: controller, readOnly: true),
             const Text(
               'mg/dL',
               style: TextStyle(fontSize: 16, color: Colors.black87),

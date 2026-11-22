@@ -1,23 +1,21 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
-import 'package:glicotrack_dev/data/local_database.dart';
 import 'home_screen.dart';
 import 'register_screen.dart';
 import 'history_screen.dart';
 import 'profile_hub_screen.dart';
+import 'data_management_screen.dart';
+import '../presentation/app_store.dart';
+
+import 'package:provider/provider.dart';
 
 class MainScreen extends StatefulWidget {
-  // Instância do SQLite recebida da inicialização do aplicativo.
-  final LocalDatabase localDatabase;
-
-  const MainScreen({
-    super.key,
-    required this.localDatabase,
-  });
+  const MainScreen({super.key});
 
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
+
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
 
@@ -31,17 +29,18 @@ class _MainScreenState extends State<MainScreen> {
           });
         },
       ),
-      RegisterScreen(
-  localDatabase: widget.localDatabase,
-      ),
+      RegisterScreen(active: _currentIndex == 1),
       const ProfileHubScreen(),
-      HistoryScreen(localDatabase: widget.localDatabase),
+      const HistoryScreen(),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final store = context.watch<AppStore>();
+    if (store.deleting) return const DataManagementScreen();
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       backgroundColor: const Color(0xFFE3F1FD),
       extendBody: true,
 

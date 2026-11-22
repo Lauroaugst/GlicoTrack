@@ -2,58 +2,79 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
-import '../screens/history_screen.dart'; // Para acessar os modelos GlucoseReading e WeeklySummaryModel
+import 'package:flutter/services.dart';
+
+import '../presentation/history_summary.dart';
+import '../presentation/glucose_style.dart';
 
 class PdfService {
+  static Future<pw.ThemeData>? _fonts;
+  static Future<pw.ThemeData> _loadFonts() async => pw.ThemeData.withFont(
+    base: pw.Font.ttf(
+      await rootBundle.load('assets/fonts/NotoSans-Regular.ttf'),
+    ),
+    bold: pw.Font.ttf(await rootBundle.load('assets/fonts/NotoSans-Bold.ttf')),
+  );
+
   /// Gera o relatório médico e abre a interface nativa para salvar/compartilhar
   static Future<void> generateMedicalReport(WeeklySummaryModel summary) async {
-    final pdf = pw.Document();
+    await Printing.sharePdf(
+      bytes: await buildReport(summary),
+      filename: 'GlicoTrack.pdf',
+    );
+  }
 
-    // Mapeamento dos dias da semana para posições numéricas no eixo X do gráfico
-    final Map<String, double> dayToX = {
-      'SEG': 1,
-      'TER': 2,
-      'QUA': 3,
-      'QUI': 4,
-      'SEX': 5,
-      'SAB': 6,
-      'DOM': 7,
-    };
+  static Future<Uint8List> buildReport(WeeklySummaryModel summary) async {
+    final pdf = pw.Document(theme: await (_fonts ??= _loadFonts()));
 
-    // Montagem dos dados (Dataset) corrigida para usar LineDataSet
     final dataset = pw.LineDataSet(
       color: PdfColors.blue800,
-      data: summary.readings.map((r) {
-        return pw.PointChartValue(dayToX[r.day] ?? 0, r.value);
-      }).toList(),
+      data: summary.readings
+          .map((r) => pw.PointChartValue(r.x, r.value))
+          .toList(),
     );
 
     // Constrói as páginas do PDF (MultiPage cria novas páginas automaticamente se o conteúdo vazar)
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
+        maxPages: 10000,
         margin: const pw.EdgeInsets.all(40), // Margem padrão ABNT/Médica
         build: (pw.Context context) {
           return [
             _buildHeader(),
             pw.SizedBox(height: 24),
-            _buildPatientInfo(summary.dateRange),
+            _buildPatientInfo(summary),
             pw.SizedBox(height: 24),
             _buildSummary(summary),
             pw.SizedBox(height: 32),
-            _buildChart(dataset),
+            _buildChart(dataset, summary),
             pw.SizedBox(height: 32),
-            _buildTable(summary.readings),
+            if (summary.records.isEmpty) pw.Text('Nenhuma medição no período.'),
+            if (summary.records.isNotEmpty) _buildTable(summary),
+            pw.SizedBox(height: 16),
+            pw.Text(
+              'Observações do paciente',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+            ),
+            ...summary.records
+                .where((r) => r.notes.isNotEmpty)
+                .map(
+                  (r) => pw.Paragraph(
+                    text:
+                        '${dateLabel(r.measuredAt)} ${timeLabel(r.measuredAt)}: ${r.notes}',
+                  ),
+                ),
+            pw.Text(
+              'Indicadores informativos. Este relatório não fornece diagnóstico nem recomenda doses ou tratamentos.',
+              style: const pw.TextStyle(fontSize: 10),
+            ),
           ];
         },
       ),
     );
 
-    // Dispara a interface nativa do celular (Preview, Imprimir, Enviar por WhatsApp, Salvar PDF)
-    await Printing.layoutPdf(
-      onLayout: (PdfPageFormat format) async => pdf.save(),
-      name: 'Relatorio_Glicemia_${summary.dateRange.replaceAll(' ', '_')}.pdf',
-    );
+    return pdf.save();
   }
 
   // --- Subcomponentes de Layout do PDF ---
@@ -80,19 +101,21 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildPatientInfo(String dateRange) {
-    return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+  static pw.Widget _buildPatientInfo(WeeklySummaryModel summary) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(
-              'Paciente: ___________________________',
+              'Paciente: ${summary.profile.name}',
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
             pw.SizedBox(height: 6),
-            pw.Text('Idade/Peso: _________________________'),
+            pw.Text(
+              'Idade: ${summary.profile.age ?? '--'} • Peso: ${summary.profile.weight ?? '--'} kg',
+            ),
           ],
         ),
         pw.Column(
@@ -102,7 +125,7 @@ class PdfService {
               'Período Analisado:',
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
-            pw.Text(dateRange),
+            pw.Text(summary.dateRange),
           ],
         ),
       ],
@@ -120,9 +143,25 @@ class PdfService {
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceAround,
         children: [
-          _summaryItem('Média', '${summary.average.toInt()} mg/dL'),
-          _summaryItem('Mínima', '${summary.min.toInt()} mg/dL'),
-          _summaryItem('Máxima', '${summary.max.toInt()} mg/dL'),
+          _summaryItem('Medições', '${summary.stats.count}'),
+          _summaryItem(
+            'Na faixa',
+            '${summary.stats.inRangePercent.toStringAsFixed(0)}%',
+          ),
+          _summaryItem(
+            'Média',
+            summary.stats.count == 0
+                ? '--'
+                : '${summary.average.toStringAsFixed(1)} mg/dL',
+          ),
+          _summaryItem(
+            'Mínima',
+            summary.stats.count == 0 ? '--' : '${summary.min.toInt()} mg/dL',
+          ),
+          _summaryItem(
+            'Máxima',
+            summary.stats.count == 0 ? '--' : '${summary.max.toInt()} mg/dL',
+          ),
         ],
       ),
     );
@@ -148,12 +187,12 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildChart(pw.Dataset dataset) {
+  static pw.Widget _buildChart(pw.Dataset dataset, WeeklySummaryModel summary) {
     return pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Gráfico de Acompanhamento Semanal',
+          'Variabilidade no período selecionado',
           style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
         ),
         pw.SizedBox(height: 16),
@@ -162,28 +201,33 @@ class PdfService {
           child: pw.Chart(
             grid: pw.CartesianGrid(
               xAxis: pw.FixedAxis(
-                [1, 2, 3, 4, 5, 6, 7],
-                format: (v) => [
-                  'SEG',
-                  'TER',
-                  'QUA',
-                  'QUI',
-                  'SEX',
-                  'SAB',
-                  'DOM',
-                ][v.toInt() - 1],
+                [0, 0.25, 0.5, 0.75, 1],
+                format: (v) => dateLabel(
+                  summary.start.add(
+                    Duration(
+                      milliseconds:
+                          ((summary.end.millisecondsSinceEpoch -
+                                      summary.start.millisecondsSinceEpoch -
+                                      1) *
+                                  v)
+                              .round(),
+                    ),
+                  ),
+                ),
                 ticks: true,
               ),
-              yAxis: pw.FixedAxis([
-                40,
-                80,
-                120,
-                160,
-                200,
-                240,
-                280,
-                320,
-              ], ticks: true),
+              yAxis: pw.FixedAxis(
+                [
+                  0,
+                  70,
+                  summary.settings.upper.toDouble(),
+                  (summary.max > summary.settings.upper
+                          ? summary.max
+                          : summary.settings.upper.toDouble()) +
+                      30,
+                ]..sort(),
+                ticks: true,
+              ),
             ),
             datasets: [dataset],
           ),
@@ -192,36 +236,34 @@ class PdfService {
     );
   }
 
-  static pw.Widget _buildTable(List<GlucoseReading> readings) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(
-          'Registros Detalhados',
-          style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+  static pw.Widget _buildTable(WeeklySummaryModel summary) =>
+      pw.TableHelper.fromTextArray(
+        headers: [
+          'Data/hora',
+          'Categoria',
+          'mg/dL',
+          'Insulina U',
+          'Carboidratos g',
+          'Classificação',
+        ],
+        headerStyle: pw.TextStyle(
+          fontWeight: pw.FontWeight.bold,
+          color: PdfColors.white,
+          fontSize: 9,
         ),
-        pw.SizedBox(height: 12),
-        pw.TableHelper.fromTextArray(
-          headers: [
-            'Dia da Semana',
-            'Glicemia (mg/dL)',
-            'Classificação Médica',
-          ],
-          headerStyle: pw.TextStyle(
-            fontWeight: pw.FontWeight.bold,
-            color: PdfColors.white,
-          ),
-          headerDecoration: const pw.BoxDecoration(color: PdfColors.blue800),
-          cellAlignment: pw.Alignment.center,
-          data: readings.map((r) {
-            String status = 'Normal';
-            if (r.value < 70) status = 'Hipoglicemia';
-            if (r.value > 180) status = 'Hiperglicemia';
-
-            return [r.day, r.value.toString(), status];
-          }).toList(),
-        ),
-      ],
-    );
-  }
+        cellStyle: const pw.TextStyle(fontSize: 9),
+        headerDecoration: const pw.BoxDecoration(color: PdfColors.blue800),
+        data: summary.records
+            .map(
+              (r) => [
+                '${dateLabel(r.measuredAt)} ${timeLabel(r.measuredAt)}',
+                r.category.label,
+                '${r.glucose}',
+                '${r.insulin ?? '--'}',
+                '${r.carbs ?? '--'}',
+                summary.settings.classify(r.glucose).label,
+              ],
+            )
+            .toList(),
+      );
 }

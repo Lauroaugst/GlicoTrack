@@ -1,5 +1,19 @@
 # GlicoTrack
 
+## Backend e entrega da Unidade II
+
+O aplicativo existente em `glicotrack_dev/` recebeu domínio validado, Provider, SQLite/SQLCipher, autenticação Firebase, sincronização Firestore, CRUD integrado, relatórios PDF/CSV e regras de acesso. A inicialização utiliza o `firebase_options.dart` publicado pelo grupo para o projeto `glicotrack-bf802`. A habilitação de e-mail/senha, o Firestore e a implantação das regras/Cloud Function ainda precisam ser conferidos na conta do grupo.
+
+- [Configuração e comandos](docs/configuracao-firebase.md)
+- [Arquitetura, SQLite e modelagem Firestore](docs/arquitetura-unidade-ii.md)
+- [Casos de uso e fluxo real](docs/fluxos-unidade-ii.md)
+- [Matriz RF01-RF17 / RNF01-RNF21](docs/matriz-rastreabilidade.md)
+- [Escopo, EAP e sprints](docs/planejamento-unidade-ii.md)
+- [Testes, desempenho e limitações](docs/validacao-unidade-ii.md)
+- [Registro de IA](docs/uso-de-ia.md)
+
+As responsabilidades históricas e referências abaixo foram preservadas. As contribuições publicadas permanecem atribuídas aos respectivos autores no histórico Git; a integração foi conciliada com as atualizações da main de 21/11/2026.
+
 Aplicativo móvel para controle e acompanhamento da glicemia e do diabetes, com foco em registro ultrarrápido, acessibilidade severa e funcionamento offline.
 
 **Disciplina:** Programação para Dispositivos Móveis — Universidade Tiradentes (Unit)
