@@ -55,12 +55,19 @@ class ProfileHubScreen extends StatelessWidget {
                     color: Colors.black87,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
 
                 Text(
                   context.watch<AppStore>().profile.name,
                   textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.black54,
+                  ),
                 ),
+                const SizedBox(height: 20),
+
                 // Card 1: Dados Pessoais
                 _MenuActionCard(
                   title: 'Dados Pessoais',

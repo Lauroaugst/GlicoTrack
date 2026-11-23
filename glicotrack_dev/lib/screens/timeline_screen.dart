@@ -287,71 +287,78 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                     const SizedBox(height: 12),
                                 itemBuilder: (context, index) {
                                   final record = records[index];
-                                  return Column(
+                                  return Container(
                                     key: ValueKey(record.id),
-                                    children: [
-                                      _MeasurementCard(
-                                        model: measurements[index],
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.only(
-                                          top: 12,
-                                          left: 12,
-                                          right: 12,
-                                          bottom: 4,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    padding: const EdgeInsets.only(
+                                      top: 16,
+                                      left: 16,
+                                      right: 16,
+                                      bottom: 6,
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.stretch,
+                                      children: [
+                                        _MeasurementCard(
+                                          model: measurements[index],
                                         ),
-                                        decoration: BoxDecoration(
-                                          color: Colors.white,
-                                          borderRadius: BorderRadius.circular(
-                                            16,
+                                        const Padding(
+                                          padding: EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          child: Divider(
+                                            height: 1,
+                                            color: Colors.black12,
                                           ),
                                         ),
-                                        child: Column(
-                                          children: [
-                                            Text(
-                                              'Refeição: ${mealLabel(record.meal)}',
-                                            ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              '${store.settings.classify(record.glucose).label} • Insulina: ${record.insulin ?? '--'} U • Carboidratos: ${record.carbs ?? '--'} g',
+                                        Text(
+                                          'Refeição: ${mealLabel(record.meal)}',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          '${store.settings.classify(record.glucose).label} • Insulina: ${record.insulin ?? '--'} U • Carboidratos: ${record.carbs ?? '--'} g',
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        if (record.notes.isNotEmpty)
+                                          Padding(
+                                            padding: const EdgeInsets.all(8),
+                                            child: Text(
+                                              record.notes,
                                               textAlign: TextAlign.center,
                                             ),
-                                            if (record.notes.isNotEmpty)
-                                              Padding(
-                                                padding: const EdgeInsets.all(
-                                                  8,
-                                                ),
-                                                child: Text(record.notes),
+                                          ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.end,
+                                          children: [
+                                            IconButton(
+                                              tooltip: 'Editar registro',
+                                              icon: const Icon(
+                                                Icons.edit_outlined,
                                               ),
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.end,
-                                              children: [
-                                                IconButton(
-                                                  tooltip: 'Editar registro',
-                                                  icon: const Icon(
-                                                    Icons.edit_outlined,
+                                              onPressed: () =>
+                                                  Navigator.of(context).push(
+                                                    MaterialPageRoute<void>(
+                                                      builder: (_) =>
+                                                          RegisterScreen(
+                                                            record: record,
+                                                          ),
+                                                    ),
                                                   ),
-                                                  onPressed: () =>
-                                                      Navigator.of(
-                                                        context,
-                                                      ).push(
-                                                        MaterialPageRoute<void>(
-                                                          builder: (_) =>
-                                                              RegisterScreen(
-                                                                record: record,
-                                                              ),
-                                                        ),
-                                                      ),
-                                                ),
-                                                IconButton(
-                                                  tooltip: 'Excluir registro',
-                                                  icon: const Icon(
-                                                    Icons.delete_outline,
-                                                  ),
-                                                  onPressed: () async {
-                                                    final confirmed = await showDialog<bool>(
+                                            ),
+                                            IconButton(
+                                              tooltip: 'Excluir registro',
+                                              icon: const Icon(
+                                                Icons.delete_outline,
+                                              ),
+                                              onPressed: () async {
+                                                final confirmed =
+                                                    await showDialog<bool>(
                                                       context: context,
                                                       builder:
                                                           (
@@ -386,30 +393,28 @@ class _TimelineScreenState extends State<TimelineScreen> {
                                                             ],
                                                           ),
                                                     );
-                                                    if (confirmed != true ||
-                                                        !context.mounted) {
-                                                      return;
-                                                    }
-                                                    try {
-                                                      await store.deleteRecord(
-                                                        record.id,
-                                                      );
-                                                    } catch (error) {
-                                                      if (context.mounted) {
-                                                        showAppError(
-                                                          context,
-                                                          error,
-                                                        );
-                                                      }
-                                                    }
-                                                  },
-                                                ),
-                                              ],
+                                                if (confirmed != true ||
+                                                    !context.mounted) {
+                                                  return;
+                                                }
+                                                try {
+                                                  await store.deleteRecord(
+                                                    record.id,
+                                                  );
+                                                } catch (error) {
+                                                  if (context.mounted) {
+                                                    showAppError(
+                                                      context,
+                                                      error,
+                                                    );
+                                                  }
+                                                }
+                                              },
                                             ),
                                           ],
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   );
                                 },
                               ),
@@ -487,15 +492,9 @@ class _MeasurementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
           Text(
             model.dateLabel,
             style: const TextStyle(
@@ -559,8 +558,7 @@ class _MeasurementCard extends StatelessWidget {
             ],
           ),
         ],
-      ),
-    );
+      );
   }
 }
 

@@ -469,7 +469,7 @@ class _DatePickerField extends StatelessWidget {
   });
 
   String get _formattedDate {
-    return '${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}';
+    return '${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.year}';
   }
 
   @override
