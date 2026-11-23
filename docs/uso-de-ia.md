@@ -44,6 +44,17 @@ Os prompts mais eficientes nessa etapa combinaram **anexo do print da tela do Fi
 
 As solicitações de validação e conferência dos documentos ajudaram a distinguir implementação, resultado de teste e aceite ainda pendente. Não são evidência de revisão ou domínio do código por todos os integrantes.
 
+### Banco de dados Firebase
+
+| Solicitação | Aplicação e resultado verificável |
+| --- | --- |
+| “Como integrar o Firebase Firestore ao projeto Flutter?” | A orientação foi utilizada para integrar o aplicativo GlicoTrack ao Firebase, configurando a autenticação anônima e a comunicação com o Cloud Firestore. Essa integração possibilitou armazenar os registros na nuvem, organizados pelo identificador único (UID) de cada usuário.r |
+|“Como utilizar o SQLite para armazenar os registros de glicemia?” | As orientações auxiliaram na implementação da camada de persistência local, utilizando SQLite criptografado para armazenar os registros de glicemia. Foram utilizados métodos de gravação e consulta, permitindo que os dados permanecessem disponíveis independentemente da conexão com a internet. |
+| “Como sincronizar os dados do SQLite com o Firebase?” | A orientação foi utilizada para desenvolver uma arquitetura offline-first, na qual os registros são armazenados inicialmente no SQLite e posteriormente sincronizados com o Cloud Firestore. O processo utiliza identificadores de documentos e metadados de sincronização para controlar as alterações. |
+| “Como substituir os dados fictícios do Histórico pelos registros reais do banco?”| As orientações foram utilizadas para modificar a tela de Histórico e Análise, substituindo os registros simulados por consultas ao SQLite. Também foram implementados o cálculo automático da média, dos valores mínimo e máximo e a atualização da interface após alterações nos registros. |
+|  “Como conectar a Linha do Tempo aos registros reais do SQLite?” |  A orientação foi utilizada para modificar o arquivo timeline_screen.dart, substituindo os registros fictícios por dados recuperados do SQLite. Foi implementado o método _loadRecords(), responsável por consultar o banco, converter os documentos em objetos HealthRecord e organizar as medições em ordem cronológica decrescente. |
+
+
 ## Erros gerados pela IA e correções aplicadas
 
 | Etapa | Erro identificado no apoio da IA | Correção realizada pelo grupo | Evidência e limite |
