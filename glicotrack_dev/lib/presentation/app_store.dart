@@ -155,7 +155,14 @@ class AppStore extends ChangeNotifier {
     records = const [];
     _profile = null;
     notifyListeners();
-    await FirebaseAuth.instance.signOut();
+    try {
+      await user.delete();
+    } on FirebaseAuthException {
+      await FirebaseAuth.instance.signOut();
+    }
+    if (FirebaseAuth.instance.currentUser != null) {
+      await FirebaseAuth.instance.signOut();
+    }
   }
 
   Future<void> shutdown() async {

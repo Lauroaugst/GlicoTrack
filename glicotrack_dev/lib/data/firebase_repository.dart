@@ -100,11 +100,47 @@ class FirebaseRepository implements RemoteRepository {
 
   @override
   Future<void> deleteAccount() async {
-    await FirebaseFunctions.instance
-        .httpsCallable(
-          'deleteMyAccount',
-          options: HttpsCallableOptions(timeout: const Duration(minutes: 2)),
-        )
-        .call<void>();
+    try {
+      await FirebaseFunctions.instance
+          .httpsCallable(
+            'deleteMyAccount',
+            options: HttpsCallableOptions(timeout: const Duration(minutes: 2)),
+          )
+          .call<void>();
+    } on FirebaseFunctionsException {
+      try {
+        final snapshot = await _collection
+            .get(const GetOptions(source: Source.server))
+            .timeout(const Duration(seconds: 15));
+        for (final doc in snapshot.docs) {
+          try {
+            await doc.reference.delete();
+          } on FirebaseException {
+            final data = doc.data();
+            if (data['deleted'] != true) {
+              await doc.reference.update({
+                'deleted': true,
+                'changedAt': FieldValue.serverTimestamp(),
+              });
+            }
+          }
+        }
+        final conflicts = await firestore
+            .collection('users')
+            .doc(uid)
+            .collection('conflicts')
+            .get(const GetOptions(source: Source.server))
+            .timeout(const Duration(seconds: 15));
+        for (final doc in conflicts.docs) {
+          try {
+            await doc.reference.delete();
+          } on FirebaseException {
+            // Ignore if rules restrict physical conflict deletion.
+          }
+        }
+      } on FirebaseException {
+        // Proceed with Auth user deletion if remote collection is already empty or restricted.
+      }
+    }
   }
 }
