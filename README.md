@@ -7,6 +7,7 @@ O aplicativo existente em `glicotrack_dev/` recebeu domínio validado, Provider,
 - [Configuração e comandos](docs/configuracao-firebase.md)
 - [Arquitetura, SQLite e modelagem Firestore](docs/arquitetura-unidade-ii.md)
 - [Casos de uso e fluxo real](docs/fluxos-unidade-ii.md)
+- [Fluxo de navegação real detalhado](docs/fluxo-navegacao.md)
 - [Matriz RF01-RF17 / RNF01-RNF21](docs/matriz-rastreabilidade.md)
 - [Escopo, EAP e sprints](docs/planejamento-unidade-ii.md)
 - [Testes, desempenho e limitações](docs/validacao-unidade-ii.md)
