@@ -16,11 +16,24 @@ class PdfService {
     bold: pw.Font.ttf(await rootBundle.load('assets/fonts/NotoSans-Bold.ttf')),
   );
 
+  static String _reportFileName(String patientName) {
+    final cleaned = patientName
+        .trim()
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(RegExp(r'[^\wÀ-ÿ-]'), '');
+    final suffix = cleaned.isEmpty ? 'Paciente' : cleaned;
+    final now = DateTime.now();
+    final day = now.day.toString().padLeft(2, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final date = '$day-$month-${now.year}';
+    return 'Relatorio_${suffix}_$date.pdf';
+  }
+
   /// Gera o relatório médico e abre a interface nativa para salvar/compartilhar
   static Future<void> generateMedicalReport(WeeklySummaryModel summary) async {
     await Printing.sharePdf(
       bytes: await buildReport(summary),
-      filename: 'GlicoTrack.pdf',
+      filename: _reportFileName(summary.profile.name),
     );
   }
 
@@ -118,13 +131,15 @@ class PdfService {
             ),
           ],
         ),
+        pw.SizedBox(height: 8),
         pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.end,
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
             pw.Text(
               'Período Analisado:',
               style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
             ),
+            pw.SizedBox(height: 4),
             pw.Text(summary.dateRange),
           ],
         ),

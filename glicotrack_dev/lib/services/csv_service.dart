@@ -48,6 +48,19 @@ class CsvService {
     return '\uFEFF${rows.map((row) => row.map(_cell).join(';')).join('\r\n')}\r\n';
   }
 
+  static String _reportFileName(String patientName) {
+    final cleaned = patientName
+        .trim()
+        .replaceAll(RegExp(r'\s+'), '')
+        .replaceAll(RegExp(r'[^\wÀ-ÿ-]'), '');
+    final suffix = cleaned.isEmpty ? 'Paciente' : cleaned;
+    final now = DateTime.now();
+    final day = now.day.toString().padLeft(2, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final date = '$day-$month-${now.year}';
+    return 'Relatorio_${suffix}_$date.csv';
+  }
+
   static Future<void> share(WeeklySummaryModel summary) async {
     await SharePlus.instance.share(
       ShareParams(
@@ -57,7 +70,7 @@ class CsvService {
             mimeType: 'text/csv',
           ),
         ],
-        fileNameOverrides: ['glicotrack.csv'],
+        fileNameOverrides: [_reportFileName(summary.profile.name)],
       ),
     );
   }
