@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:glicotrack_dev/data/sync_service.dart';
 import 'package:glicotrack_dev/presentation/app_store.dart';
+import 'package:glicotrack_dev/screens/data_management_screen.dart';
 import 'package:glicotrack_dev/screens/register_screen.dart';
 import 'package:glicotrack_dev/screens/history_screen.dart';
 import 'package:glicotrack_dev/screens/home_screen.dart';
@@ -189,9 +190,14 @@ void main() {
     tester,
   ) async {
     await mount(tester, const HomeScreen());
+    expect(find.text('Pendente'), findsNWidgets(3));
+    expect(find.text('--'), findsNWidgets(3));
+    await mount(tester, const DataManagementScreen());
     expect(find.textContaining('0 medições hoje'), findsOneWidget);
     await store.saveRecord(record(at: DateTime.now(), glucose: 133));
     await tester.pumpAndSettle();
+    expect(find.textContaining('1 medições hoje'), findsOneWidget);
+    await mount(tester, const HomeScreen());
     expect(find.text('133'), findsOneWidget);
     await tester.pumpWidget(
       ChangeNotifierProvider.value(

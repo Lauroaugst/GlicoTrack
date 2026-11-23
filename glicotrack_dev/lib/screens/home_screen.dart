@@ -1,7 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
-import '../domain/models.dart';
 import '../presentation/app_store.dart';
 
 // ============================================================================
@@ -98,15 +97,6 @@ class _HomeScreenState extends State<HomeScreen> {
             : store.settings.classify(latest.glucose).label,
       );
     }).toList();
-    final week = store.select(
-      start: DateTime(now.year, now.month, now.day - 6),
-      end: DateTime(now.year, now.month, now.day + 1),
-    );
-    final month = store.select(
-      start: DateTime(now.year, now.month, 1),
-      end: DateTime(now.year, now.month, now.day + 1),
-    );
-    final stats = RecordStatistics(week, store.settings, days: 7);
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
 
@@ -136,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
       // Corpo da Tela
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 22.0, vertical: 20.0),
+          padding: const EdgeInsets.fromLTRB(22.0, 20.0, 22.0, 110.0),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
@@ -152,31 +142,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              const SizedBox(height: 24),
-              Text(
-                '${today.length} medições hoje • ${stats.count} nos últimos 7 dias • ${month.length} neste mês',
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                'Média diária: ${stats.frequency.toStringAsFixed(1)} • Na faixa: ${stats.inRangePercent.toStringAsFixed(0)}%',
-                textAlign: TextAlign.center,
-              ),
-              Text(
-                TrendIndicator.analyze(week, store.settings).message,
-                textAlign: TextAlign.center,
-              ),
-              if (store.loadError != null)
-                Text(
-                  store.loadError!,
-                  style: const TextStyle(color: Colors.red),
-                ),
-              Text(
-                store.sync.error ??
-                    (store.sync.syncing
-                        ? 'Sincronizando…'
-                        : '${store.pending} alterações aguardando sincronização'),
-                textAlign: TextAlign.center,
-              ),
               const SizedBox(height: 24),
 
               // Seção 2: Controle Diário (Ações)

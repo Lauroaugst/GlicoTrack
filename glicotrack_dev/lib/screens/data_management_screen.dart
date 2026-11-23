@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
+import '../domain/models.dart';
 import '../presentation/app_store.dart';
 import '../presentation/glucose_style.dart';
 
@@ -124,6 +125,38 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   @override
   Widget build(BuildContext context) {
     final store = context.watch<AppStore>();
+    final now = DateTime.now();
+    final today = store.select(
+      start: DateTime(now.year, now.month, now.day),
+      end: DateTime(now.year, now.month, now.day + 1),
+    );
+    final week = store.select(
+      start: DateTime(now.year, now.month, now.day - 6),
+      end: DateTime(now.year, now.month, now.day + 1),
+    );
+    final month = store.select(
+      start: DateTime(now.year, now.month, 1),
+      end: DateTime(now.year, now.month, now.day + 1),
+    );
+    final stats = RecordStatistics(week, store.settings, days: 7);
+    final trendMessage = TrendIndicator.analyze(week, store.settings).message;
+    final syncStatusText =
+        store.sync.error ??
+        (store.sync.syncing
+            ? 'Sincronizando…'
+            : '${store.pending} alterações aguardando sincronização');
+    final syncStatusColor = store.sync.error != null
+        ? const Color(0xFFD32F2F)
+        : (store.pending == 0 && !store.sync.syncing
+              ? const Color(0xFF2E7D32)
+              : const Color(0xFF0060C0));
+    final syncStatusIcon = store.sync.error != null
+        ? Icons.error_outline_rounded
+        : (store.sync.syncing
+              ? Icons.sync_rounded
+              : (store.pending == 0
+                    ? Icons.cloud_done_rounded
+                    : Icons.cloud_upload_outlined));
     return Scaffold(
       backgroundColor: const Color(0xFFE3F1FD),
       appBar: AppBar(
@@ -187,7 +220,115 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                           height: 1.3,
                         ),
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 20),
+
+                      // Card interno de resumo de dados e sincronização
+                      Container(
+                        padding: const EdgeInsets.all(14.0),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFE3F1FD),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(
+                              0xFF0060C0,
+                            ).withValues(alpha: 0.35),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            const Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.insights_rounded,
+                                  color: Color(0xFF0060C0),
+                                  size: 20,
+                                ),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Resumo e Sincronização',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF003D80),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              '${today.length} medições hoje • ${stats.count} nos últimos 7 dias • ${month.length} neste mês',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Média diária: ${stats.frequency.toStringAsFixed(1)} • Na faixa: ${stats.inRangePercent.toStringAsFixed(0)}%',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.black87,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              trendMessage,
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: Colors.black87,
+                                height: 1.35,
+                              ),
+                            ),
+                            if (store.loadError != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                store.loadError!,
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFD32F2F),
+                                ),
+                              ),
+                            ],
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 10.0),
+                              child: Divider(color: Colors.black12, height: 1),
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  syncStatusIcon,
+                                  color: syncStatusColor,
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    syncStatusText,
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: syncStatusColor,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
 
                       if (store.deleting)
                         const Text(
