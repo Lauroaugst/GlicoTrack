@@ -17,19 +17,27 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 0;
+  // Inicia sempre na tela de Registro de Glicemia (índice 1)
+  int _currentIndex = 1;
+  int _registerFocusTick = 0;
+
+  void _selectTab(int index) {
+    setState(() {
+      _currentIndex = index;
+      if (index == 1) {
+        _registerFocusTick++;
+      }
+    });
+  }
 
   // Método que gera a lista de telas, permitindo passar o callback para a HomeScreen
   List<Widget> _getScreens() {
     return [
-      HomeScreen(
-        onTabChange: (index) {
-          setState(() {
-            _currentIndex = index;
-          });
-        },
+      HomeScreen(onTabChange: _selectTab),
+      RegisterScreen(
+        active: _currentIndex == 1,
+        focusRequestId: _registerFocusTick,
       ),
-      RegisterScreen(active: _currentIndex == 1),
       const ProfileHubScreen(),
       const HistoryScreen(),
     ];
@@ -52,11 +60,7 @@ class _MainScreenState extends State<MainScreen> {
           padding: const EdgeInsets.fromLTRB(18, 0, 18, 12),
           child: _SharedBottomNavBar(
             currentIndex: _currentIndex,
-            onTap: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
+            onTap: _selectTab,
           ),
         ),
       ),

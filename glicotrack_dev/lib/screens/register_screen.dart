@@ -39,9 +39,15 @@ abstract class MealOptions {
 }
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key, this.record, this.active = true});
+  const RegisterScreen({
+    super.key,
+    this.record,
+    this.active = true,
+    this.focusRequestId = 0,
+  });
   final HealthRecord? record;
   final bool active;
+  final int focusRequestId;
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -53,6 +59,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   MeasurementCategory _category = MeasurementCategory.fasting;
   final _notesController = TextEditingController();
   final _glucoseFocus = FocusNode();
+  final _glucoseFieldKey = GlobalKey();
   bool _saving = false;
   bool _hypoAlerted = false;
   bool _timeChosen = false;
@@ -76,17 +83,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   void _focusWhenActive() {
-    if (widget.active) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && widget.active) _glucoseFocus.requestFocus();
-      });
-    }
+    if (!widget.active) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !widget.active) return;
+      FocusScope.of(context).requestFocus(_glucoseFocus);
+      unawaited(SystemChannels.textInput.invokeMethod<void>('TextInput.show'));
+      final fieldContext = _glucoseFieldKey.currentContext;
+      if (fieldContext != null) {
+        Scrollable.ensureVisible(
+          fieldContext,
+          alignment: 0.35,
+          duration: const Duration(milliseconds: 200),
+        );
+      }
+    });
   }
 
   @override
   void didUpdateWidget(covariant RegisterScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.active && !oldWidget.active) _focusWhenActive();
+    if (widget.active &&
+        (!oldWidget.active ||
+            widget.focusRequestId != oldWidget.focusRequestId)) {
+      _focusWhenActive();
+    }
     if (!widget.active) {
       _glucoseFocus.unfocus();
       _alertTimer?.cancel();
@@ -399,13 +419,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 const SizedBox(height: 20),
 
                 // Inputs Numéricos (Retrocedidos para digitação direta, sem steppers)
-                _SimpleTextField(
-                  label: 'Glicemia (mg/dL)',
-                  controller: _glucoseController,
-                  isDecimal: false,
-                  focusNode: _glucoseFocus,
-                  onSubmitted: (_) => _saveRecord(),
-                  large: true,
+                KeyedSubtree(
+                  key: _glucoseFieldKey,
+                  child: _SimpleTextField(
+                    label: 'Glicemia (mg/dL)',
+                    controller: _glucoseController,
+                    isDecimal: false,
+                    focusNode: _glucoseFocus,
+                    onSubmitted: (_) => _saveRecord(),
+                    large: true,
+                  ),
                 ),
                 if (status != null)
                   Semantics(

@@ -109,6 +109,37 @@ void main() {
     expect(tester.takeException(), isNull);
   });
   testWidgets(
+    'navegação principal inicia na tela de registro com teclado focado e refoca ao retornar',
+    (tester) async {
+      await mount(tester, const MainScreen());
+      final registerFinder = find.byType(RegisterScreen, skipOffstage: false);
+      expect(find.byType(RegisterScreen), findsOneWidget);
+      final glucoseField = find.descendant(
+        of: registerFinder,
+        matching: find.byType(TextField, skipOffstage: false),
+      );
+      expect(
+        tester.widget<TextField>(glucoseField.first).focusNode!.hasFocus,
+        isTrue,
+      );
+      // Sai para a Home e confirma perda de foco
+      await tester.tap(find.byIcon(Icons.home_rounded));
+      await tester.pumpAndSettle();
+      expect(
+        tester.widget<TextField>(glucoseField.first).focusNode!.hasFocus,
+        isFalse,
+      );
+      // Retorna para Registro e confirma foco automático novamente
+      await tester.tap(find.byIcon(Icons.water_drop_outlined).last);
+      await tester.pumpAndSettle();
+      expect(find.byType(RegisterScreen), findsOneWidget);
+      expect(
+        tester.widget<TextField>(glucoseField.first).focusNode!.hasFocus,
+        isTrue,
+      );
+    },
+  );
+  testWidgets(
     'navegação principal mantém o botão acima do teclado sem dupla redução da tela',
     (tester) async {
       await mount(tester, const MainScreen());
