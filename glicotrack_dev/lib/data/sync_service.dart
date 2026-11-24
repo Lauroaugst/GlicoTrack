@@ -5,6 +5,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
 import '../domain/repositories.dart';
+import '../domain/sync_document.dart';
 import 'firebase_repository.dart';
 
 class SyncService extends ChangeNotifier {
@@ -51,12 +52,60 @@ class SyncService extends ChangeNotifier {
 
   Future<void> syncNow({bool restore = false}) async {
     if (_stopped) throw StateError('Sincronização suspensa para exclusão.');
+    if (_running != null) {
+      await _running;
+    }
     if (restore && remote is FirebaseRepository) {
       (remote as FirebaseRepository).resetCursor();
     }
     request();
     await _running;
     if (error != null) throw StateError(error!);
+  }
+
+  /// Baixa todos os documentos remotos da sessão atual sem enviar exclusões
+  /// locais antes da leitura, retornando os documentos obtidos da nuvem.
+  Future<List<SyncDocument>> restoreRemote() async {
+    if (_stopped) throw StateError('Sincronização suspensa para exclusão.');
+    if (_running != null) {
+      await _running;
+    }
+    if (await local.deletionPending()) {
+      throw StateError('Sincronização suspensa para exclusão.');
+    }
+    _retry?.cancel();
+    if (remote is FirebaseRepository) {
+      (remote as FirebaseRepository).resetCursor();
+    }
+    List<SyncDocument> pulled = const [];
+    final completer = Completer<void>();
+    _running = completer.future;
+    notifyListeners();
+    try {
+      pulled = await remote.pull();
+      for (final doc in pulled) {
+        if (_stopped) break;
+        await local.merge(doc);
+      }
+      if (!_stopped && remote is FirebaseRepository) {
+        (remote as FirebaseRepository).confirmPull();
+      }
+      error = null;
+      _failures = 0;
+      await local.recordSyncError('');
+      return pulled;
+    } catch (_) {
+      error =
+          'Não foi possível restaurar os dados da nuvem. Verifique sua conexão e tente novamente.';
+      try {
+        await local.recordSyncError('sync-unavailable');
+      } catch (_) {}
+      throw StateError(error!);
+    } finally {
+      _running = null;
+      completer.complete();
+      if (!_stopped) notifyListeners();
+    }
   }
 
   Future<void> _drain() async {

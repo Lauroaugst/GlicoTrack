@@ -41,6 +41,26 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     }
   }
 
+  Future<void> _restoreData(AppStore store) async {
+    if (_isLoading) return;
+    setState(() => _isLoading = true);
+    try {
+      final count = await store.restoreFromCloud();
+      if (mounted) {
+        final message = count > 0
+            ? '$count ${count == 1 ? 'registro restaurado' : 'registros restaurados'} da nuvem.'
+            : 'Os dados deste aparelho já estão atualizados com a nuvem.';
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+      }
+    } catch (error) {
+      if (mounted) showAppError(context, error);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
   /// Diálogo de segurança acessível para evitar exclusão acidental por idosos
   Future<void> _showDeleteConfirmation() async {
     _password.clear();
@@ -356,10 +376,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
                           color: const Color(
                             0xFF4CAF50,
                           ), // Verde para indicar recuperação segura
-                          onTap: () => _performAction(
-                            () => store.sync.syncNow(restore: true),
-                            'Dados remotos incorporados ao histórico local.',
-                          ),
+                          onTap: () => _restoreData(store),
                         ),
                       ],
                       const Padding(

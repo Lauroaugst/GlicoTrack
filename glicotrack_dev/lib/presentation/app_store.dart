@@ -34,7 +34,8 @@ class AppStore extends ChangeNotifier {
   int pending = 0;
   bool deleting = false;
   bool _disposed = false;
-  int _loadVersion = 0;
+  Future<void>? _refreshing;
+  bool _refreshAgain = false;
   StreamSubscription<void>? _subscription;
   String? loadError;
 
@@ -50,38 +51,55 @@ class AppStore extends ChangeNotifier {
     if (!_disposed) notifyListeners();
   }
 
-  Future<void> refresh() async {
-    final version = ++_loadVersion;
+  Future<void> refresh() {
+    _refreshAgain = true;
+    final current = _refreshing;
+    if (current != null) return current;
+    final operation = _runRefresh();
+    _refreshing = operation;
+    return operation;
+  }
+
+  Future<void> _runRefresh() async {
     try {
-      final docs = await local.all();
-      final nextRecords = <HealthRecord>[];
-      var nextSettings = const GlucoseSettings();
-      PatientProfile? nextProfile;
-      for (final doc in docs) {
-        if (doc.deleted) continue;
-        doc.validate(uid);
-        switch (doc.kind) {
-          case 'record':
-            nextRecords.add(HealthRecord.fromJson(doc.id, uid, doc.payload));
-          case 'settings':
-            nextSettings = GlucoseSettings.fromJson(doc.payload);
-          case 'profile':
-            nextProfile = PatientProfile.fromJson(doc.payload);
+      while (_refreshAgain && !_disposed) {
+        _refreshAgain = false;
+        try {
+          final docs = await local.all();
+          final nextRecords = <HealthRecord>[];
+          var nextSettings = const GlucoseSettings();
+          PatientProfile? nextProfile;
+          for (final doc in docs) {
+            if (doc.deleted) continue;
+            doc.validate(uid);
+            switch (doc.kind) {
+              case 'record':
+                nextRecords.add(
+                  HealthRecord.fromJson(doc.id, uid, doc.payload),
+                );
+              case 'settings':
+                nextSettings = GlucoseSettings.fromJson(doc.payload);
+              case 'profile':
+                nextProfile = PatientProfile.fromJson(doc.payload);
+            }
+          }
+          final count = await local.pendingCount();
+          if (_disposed) return;
+          records = List.unmodifiable(nextRecords);
+          settings = nextSettings;
+          _profile = nextProfile;
+          pending = count;
+          loadError = null;
+          notifyListeners();
+        } catch (_) {
+          if (_disposed) return;
+          loadError =
+              'Não foi possível ler todos os dados locais. Tente novamente.';
+          notifyListeners();
         }
       }
-      final count = await local.pendingCount();
-      if (_disposed || version != _loadVersion) return;
-      records = List.unmodifiable(nextRecords);
-      settings = nextSettings;
-      _profile = nextProfile;
-      pending = count;
-      loadError = null;
-      notifyListeners();
-    } catch (_) {
-      if (_disposed || version != _loadVersion) return;
-      loadError =
-          'Não foi possível ler todos os dados locais. Tente novamente.';
-      notifyListeners();
+    } finally {
+      _refreshing = null;
     }
   }
 
@@ -118,6 +136,44 @@ class AppStore extends ChangeNotifier {
       await local.delete(record.id);
     }
     await refresh();
+  }
+
+  String _recordRestoreKey(Map<String, dynamic> payload) =>
+      '${payload['createdAt']}|${payload['measuredAt']}';
+
+  /// Restaura registros da nuvem para o aparelho.
+  /// Incorpora documentos ativos remotos e também recupera medições que
+  /// haviam sido excluídas na Linha do Tempo (tombstones) quando não há
+  /// uma cópia ativa correspondente no dispositivo, sem duplicar registros.
+  Future<int> restoreFromCloud() async {
+    final beforeIds = records.map((r) => r.id).toSet();
+    final pulled = await sync.restoreRemote();
+    await refresh();
+
+    var restored = records.where((r) => !beforeIds.contains(r.id)).length;
+    final activeKeys = records
+        .map((r) => _recordRestoreKey(r.toJson()))
+        .toSet();
+
+    final remoteRecords =
+        pulled.where((d) => d.kind == 'record').toList()
+          ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+    var recreatedAny = false;
+    for (final doc in remoteRecords) {
+      final key = _recordRestoreKey(doc.payload);
+      if (activeKeys.contains(key)) continue;
+      await local.save(newId(), 'record', doc.payload);
+      activeKeys.add(key);
+      restored++;
+      recreatedAny = true;
+    }
+
+    await refresh();
+    if (recreatedAny) {
+      sync.request();
+    }
+    return restored;
   }
 
   Future<void> saveSettings(GlucoseSettings value) async {

@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'package:glicotrack_dev/data/local_database.dart';
 import 'package:glicotrack_dev/data/sync_service.dart';
+import 'package:glicotrack_dev/presentation/app_store.dart';
 
 import 'local_database_test.dart' show openTestDatabase;
 import 'support/fixtures.dart';
@@ -89,4 +90,37 @@ void main() {
     await sync.syncNow();
     expect(remote.pushes, 0);
   });
+  test(
+    'restaurar dados recupera registros excluídos na linha do tempo sem duplicar',
+    () async {
+      final store = AppStore(
+        uid: uid,
+        local: local,
+        sync: sync,
+        initialProfile: profile,
+      );
+      await store.initialize(startSync: false);
+      await store.saveRecord(record(glucose: 145));
+      await sync.syncNow();
+      expect(store.records.length, 1);
+
+      // Exclui na linha do tempo e sincroniza (tombstone na nuvem)
+      await store.clearRecords();
+      await sync.syncNow();
+      expect(store.records, isEmpty);
+      expect(remote.documents[recordId]!.deleted, isTrue);
+
+      // Restaurar dados da nuvem recupera o registro no dispositivo
+      final firstRestore = await store.restoreFromCloud();
+      expect(firstRestore, 1);
+      expect(store.records.length, 1);
+      expect(store.records.single.glucose, 145);
+
+      // Nova restauração não duplica o registro já recuperado
+      await sync.syncNow();
+      final secondRestore = await store.restoreFromCloud();
+      expect(secondRestore, 0);
+      expect(store.records.length, 1);
+    },
+  );
 }

@@ -56,12 +56,13 @@ class FirebaseRepository implements RemoteRepository {
   @override
   Future<List<SyncDocument>> pull() async {
     // Inclusive watermark prevents losing documents with the same server time.
-    Query<Map<String, dynamic>> query = _collection
-        .orderBy('changedAt')
-        .orderBy(FieldPath.documentId);
-    if (_watermark != null) {
-      query = query.where('changedAt', isGreaterThanOrEqualTo: _watermark);
-    }
+    final fullRestore = _watermark == null;
+    Query<Map<String, dynamic>> query = fullRestore
+        ? _collection.orderBy(FieldPath.documentId)
+        : _collection
+              .orderBy('changedAt')
+              .orderBy(FieldPath.documentId)
+              .where('changedAt', isGreaterThanOrEqualTo: _watermark);
     final result = <SyncDocument>[];
     DocumentSnapshot<Map<String, dynamic>>? last;
     Timestamp? nextWatermark;
@@ -73,13 +74,18 @@ class FirebaseRepository implements RemoteRepository {
           .get(const GetOptions(source: Source.server))
           .timeout(const Duration(seconds: 15));
       for (final doc in page.docs) {
-        final parsed = SyncDocument.fromJson(doc.data());
+        final data = doc.data();
+        final parsed = SyncDocument.fromJson(data);
         parsed.validate(uid);
         if (parsed.id != doc.id) {
           throw const FormatException('Identificador remoto inválido.');
         }
         result.add(parsed);
-        nextWatermark = doc.data()['changedAt'] as Timestamp;
+        final changedAt = data['changedAt'];
+        if (changedAt is Timestamp &&
+            (nextWatermark == null || changedAt.compareTo(nextWatermark) > 0)) {
+          nextWatermark = changedAt;
+        }
       }
       if (page.docs.length < 200) break;
       last = page.docs.last;
