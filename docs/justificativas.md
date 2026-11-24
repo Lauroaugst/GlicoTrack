@@ -1,6 +1,6 @@
 ### 2.4 Justificativas
 
-> Unidade II: as decisões anteriores permanecem como referência. A implementação e as justificativas de Provider, SQLCipher, armazenamento seguro e Firestore estão em [arquitetura-unidade-ii.md](arquitetura-unidade-ii.md). Foram conectadas as telas existentes, acrescentando apenas controles necessários de categoria, horário, observações e autenticação. O botão de salvar permanece acessível com o teclado aberto; o fundo reage à classificação exigida no aditivo. O serviço PDF original foi ampliado, e o CustomPainter preservado com repintura condicional. A exceção sonora para hipoglicemia segue o PDF e RF06.
+> Unidade II: as decisões anteriores permanecem como referência. A implementação e as justificativas de Provider, SQLCipher, armazenamento seguro e Firestore estão em [arquitetura-unidade-ii.md](arquitetura-unidade-ii.md). Foram conectadas as telas existentes, acrescentando apenas controles necessários de categoria, horário e observações, mantendo a sessão Firebase automática sem tela de login. O botão de salvar permanece acessível com o teclado aberto; o fundo reage à classificação exigida no aditivo. O serviço PDF original foi ampliado, e o CustomPainter preservado com repintura condicional. A exceção sonora para hipoglicemia segue o PDF e RF06. Por segurança clínica alinhada às diretrizes da SBD, o aplicativo registra a dose de insulina aplicada pelo usuário e não calcula nem sugere doses automaticamente sem prescrição médica individualizada.
 
 Registre brevemente as principais decisões de interface e arquitetura, como:
 

@@ -14,6 +14,7 @@ O aplicativo existente em `glicotrack_dev/` recebeu domínio validado, Provider,
 - [Diagrama de Casos de Uso (PDF)](docs/casoDeUso.pdf)
 - [Diagrama de Classes (PDF)](docs/diagramaDeClasse.pdf)
 - [Arquitetura, SQLite e modelagem Firestore (mapeamento Dart ↔ Firestore)](docs/arquitetura-unidade-ii.md)
+- [Modelagem do banco de dados (Firestore e SQLite)](docs/modelagem-banco-de-dados.md)
 - [Casos de uso e visão resumida da Unidade II](docs/fluxos-unidade-ii.md)
 - [Fluxo de navegação real detalhado](docs/fluxo-navegacao.md)
 - [Registro de uso de IA](docs/uso-de-ia.md)
@@ -61,6 +62,7 @@ GlicoTrack/
     ├── casoDeUso.pdf                   (Unidade II — Diagrama de Casos de Uso)
     ├── diagramaDeClasse.pdf            (Unidade II — Diagrama de Classes)
     ├── arquitetura-unidade-ii.md       (Unidade II — Arquitetura, SQLite e Firestore)
+    ├── modelagem-banco-de-dados.md     (Unidade II — Modelagem detalhada Firestore e SQLite)
     ├── fluxos-unidade-ii.md            (Unidade II — Casos de uso e fluxo resumido)
     ├── fluxo-navegacao.md              (Unidade II — Fluxo de navegação real detalhado)
     ├── configuracao-firebase.md        (Unidade II — Configuração e comandos Firebase)
@@ -281,7 +283,7 @@ Para assegurar integridade, segurança e aderência aos requisitos de privacidad
 
 * **`glicotrack_dev/lib/domain/` e `glicotrack_dev/lib/data/`:** modelos de domínio, camada de banco de dados local (SQLite/SQLCipher), fila de sincronização e repositório Firestore.
 * **`firestore.rules`, `firestore.indexes.json` e `functions/`:** regras de segurança por UID, índices do Firestore e Cloud Function autenticada para exclusão de dados.
-* **[docs/arquitetura-unidade-ii.md](docs/arquitetura-unidade-ii.md):** documentação técnica detalhando a arquitetura, o esquema SQLite e a modelagem/mapeamento no Firestore.
+* **[docs/arquitetura-unidade-ii.md](docs/arquitetura-unidade-ii.md) e [docs/modelagem-banco-de-dados.md](docs/modelagem-banco-de-dados.md):** documentação técnica detalhando a arquitetura, o esquema SQLite e a modelagem/mapeamento no Firestore.
 * **[CHANGELOG.md](CHANGELOG.md):** registro das alterações de modelagem e criação do banco de dados.
 
 #### 4. Organização e Participação Individual
@@ -308,7 +310,7 @@ Na reta final do desenvolvimento, a equipe atuou de forma integrada na entrega, 
 
 * **`glicotrack_dev/` e `functions/`:** aplicativo completo com backend integrado, persistência *Offline-First*, sincronização Firebase/Firestore, exclusão autenticada via Cloud Functions, exportação de relatórios PDF/CSV e suíte de testes.
 * **[docs/casoDeUso.pdf](docs/casoDeUso.pdf) e [docs/diagramaDeClasse.pdf](docs/diagramaDeClasse.pdf):** diagramas finais de Casos de Uso e de Classes.
-* **[docs/arquitetura-unidade-ii.md](docs/arquitetura-unidade-ii.md):** modelagem do banco local e mapeamento das classes Dart para coleções/documentos no Firestore.
+* **[docs/arquitetura-unidade-ii.md](docs/arquitetura-unidade-ii.md) e [docs/modelagem-banco-de-dados.md](docs/modelagem-banco-de-dados.md):** modelagem do banco local e mapeamento das classes Dart para coleções/documentos no Firestore.
 * **[docs/fluxo-navegacao.md](docs/fluxo-navegacao.md) e [docs/fluxos-unidade-ii.md](docs/fluxos-unidade-ii.md):** fluxo de navegação real do aplicativo e casos de uso.
 * **[docs/uso-de-ia.md](docs/uso-de-ia.md):** registro do uso de IA (criação do frontend a partir do Figma com Gemini, backend, prompts mais eficientes, erros/correções e justificativa das bibliotecas).
 * **[docs/validacao-unidade-ii.md](docs/validacao-unidade-ii.md) e [docs/configuracao-firebase.md](docs/configuracao-firebase.md):** registro dos testes executados, análise de desempenho, limitações conhecidas e guia de configuração Firebase.

@@ -2,7 +2,29 @@
 
 Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 
-## [Não publicado - Conferência dos documentos da Unidade II]
+## [Unidade II - Entrega Final e Validação Android] - 2026-11-23
+
+### Adicionado e documentado
+
+* Publicados os diagramas atualizados em `docs/casoDeUso.pdf` e `docs/diagramaDeClasse.pdf`.
+* Adicionada a documentação detalhada do fluxo de navegação real do aplicativo em `docs/fluxo-navegacao.md`.
+* Adicionada a modelagem do banco de dados em `docs/modelagem-banco-de-dados.md` (renomeada com extensão `.md` e vinculada ao `README.md`).
+* Complementado `docs/uso-de-ia.md` com o fluxo de criação do frontend a partir dos prints do Figma no Gemini, prompts mais eficientes, erros/correções de interface, integração Firebase e justificativa das bibliotecas (item b.vi).
+* Formalizada a decisão de segurança clínica (SBD) em `docs/arquitetura-unidade-ii.md`, `docs/justificativas.md` e `docs/matriz-rastreabilidade.md`: o app registra a dose de insulina aplicada pelo usuário sem sugerir cálculo prescritivo automático.
+* Atualizado `README.md` com índice completo da Unidade II, árvore atualizada do repositório e alinhamento da autoria das telas com o histórico Git.
+
+### Corrigido e refinado
+
+* Ajustes visuais e de responsividade nos cartões da Linha do Tempo (espaçamento e proteção contra *overflow*), na tela Meu Perfil e no formato de data do Novo Registro (`0820d31`, `02c137e`).
+* Padronização do nome do arquivo e alinhamento do cabeçalho nos relatórios PDF e CSV (`7c8b485`).
+* Correção do fluxo de exclusão de dados no Firebase com fallback compatível quando Cloud Functions não está implantada e reinício limpo da sessão anônima (`5c9d418`).
+
+### Validação em Android
+
+* Executado com sucesso o teste nativo de criptografia `integration_test/encryption_test.dart` no emulador **Pixel 7 Pro** (`API 36.1`), comprovando SQLCipher real (`PRAGMA cipher_version`), arquivo ilegível como `SQLite format 3`, rejeição com chave incorreta e reabertura via Android Keystore.
+* Validado na prática no emulador Android o roteiro de aceite: entrada direta nas 4 abas, foco automático do teclado numérico, mudança de cor e alerta sonoro audível abaixo de 70 mg/dL, 5 medições em 1 minuto sem travar lista/gráfico, funcionamento offline-first com Modo Avião + sincronização no Firestore real (`glicotrack-bf802`) e compartilhamento nativo de PDF/CSV (registrado em `docs/validacao-unidade-ii.md` e `docs/matriz-rastreabilidade.md`).
+
+## [Unidade II - Conferência dos documentos e remoção do login] - 2026-11-22
 
 * Conferidos o estudo de caso, o aditivo e o enunciado da avaliação, com rastreabilidade por página/item e distinção entre implementação e aceite pendente.
 * Removidos login, cadastro, recuperação de senha e logout acrescentados na integração. Mantidas somente as telas existentes da equipe, conforme o escopo específico desta versão, com sessão automática Firebase em segundo plano.

@@ -54,7 +54,7 @@ Escopo específico desta versão: integrar somente as telas do frontend já dese
 
 Registro manual de glicemia/insulina/carboidratos, PDF do usuário, exclusão solicitada pelo app, fonte ampliada, botão grande, ausência de confirmação para salvar e cores por faixa possuem implementação nas telas e serviços existentes. O som abaixo de 70 possui ponte Android/iOS e controle de repetição; a audibilidade física não foi confirmada. Os limites de três segundos, duas/três interações com usuário e uso em diferentes ambientes exigem aceite real. O teste de aparelho com 2 GB de RAM continua pendente.
 
-O objetivo na página 1 menciona cálculo de insulina baseado na SBD. Não há fórmula, parâmetros individuais nem fluxo de cálculo nos PDFs; o frontend registra a dose aplicada. O cálculo não está implementado e a regra precisa ser esclarecida com a disciplina, sem inventar parâmetros ou marcar o objetivo como concluído.
+O objetivo na página 1 menciona cálculo de insulina baseado nas diretrizes da SBD. Por decisão explícita de segurança clínica do grupo, o aplicativo **registra a dose de insulina aplicada** e os carboidratos consumidos, mas **não calcula nem prescreve doses automaticamente**, uma vez que o cálculo de bolus depende de parâmetros individuais prescritos por profissional de saúde (razão insulina/carboidrato, fator de sensibilidade e insulina ativa), evitando risco de hipoglicemia ou dosagem inadequada. O contrato `PrescribedDoseCalculator` permanece no domínio apenas como ponto de extensão futuro.
 
 Não foram identificadas como extras as funções exigidas no aditivo: CSV, tendências, categorias clínicas, metas, criptografia e conflitos. Edição de perfil e foto conectam controles já existentes. Não há telas de login/cadastro/recuperação ou novas abas principais. Nenhum commit dos outros integrantes foi removido. Backup e restauração alcançam somente o UID da sessão atual, sem recuperação automática em outra instalação.
 
@@ -106,6 +106,13 @@ Os caminhos abaixo são relativos a `glicotrack_dev/`, exceto arquivos Firebase 
 | RNF21 | Uso em ambientes cotidianos | Alto contraste, foco e navegação preservados | Testes com usuários e ambientes não realizados | Pendente |
 
 Além dos IDs originais, o aditivo tem implementação de categorias, metas, estatísticas mensais, tendências informativas, CSV, Provider, camadas, conflitos arquivados e restauração idempotente. Não há cálculo clínico de insulina nem afirmação de diagnóstico. Desempenho GPU, memória real e armazenamento seguro nativo não são inferidos dos testes unitários.
+
+## Validação em emulador Android - 23/11/2026
+
+Executados em emulador Android (`Pixel_7_Pro`, API 36.1, ~3 GB RAM, WHPX) conectado ao projeto `glicotrack-bf802`:
+- **Criptografia nativa (`integration_test/encryption_test.dart`):** **aprovado** (`PRAGMA cipher_version`, cabeçalho criptografado, recusa com chave incorreta e reabertura via Android Keystore) — fecha a pendência técnica de comprovação nativa Android para RF13, RNF12 e RNF15.
+- **Roteiro prático no emulador:** aprovados abertura direta nas 4 abas, foco automático do teclado numérico, botão de salvar acima do teclado, reação de cores (`68` vermelho, `120` verde, `200` laranja) e **alerta sonoro audível** (RF06, RNF02, RNF07, RNF08), 5 registros em 1 minuto sem travamento na `ListView` e `CustomPainter`, modo **offline-first** com Modo Avião + fechamento/reabertura + sincronização real com o Firestore (RF14, RF15, RNF13, RNF14) e compartilhamento nativo de **PDF e CSV** (RF11, RNF17).
+- **Ainda pendentes:** conferência das regras publicadas em `glicotrack-bf802` pela conta proprietária, validação em hardware físico de **2 GB de RAM** (RNF19), medição cronometrada formal de startup em hardware alvo (RNF09), testes com usuários/personas em ambientes cotidianos (RNF21), iOS/macOS e definição sobre cálculo de insulina (SBD).
 
 ## Validação adicional de 21/11/2026
 
